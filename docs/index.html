@@ -1,0 +1,1465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Wastewater Trends</title>
+<meta name="description" content="Explore and compare WastewaterSCAN pathogen surveillance data across United States sewersheds.">
+<meta name="color-scheme" content="light dark">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<style>
+/* ---------------------------------------------------------------- tokens */
+:root {
+  color-scheme: light;
+  --surface-0: #f6f6f4;
+  --surface-1: #fcfcfb;
+  --surface-2: #f0efec;
+  --border:    #dedcd6;
+  --border-strong: #c3c2b7;
+  --text-primary:   #0b0b0b;
+  --text-secondary: #52514e;
+  --text-muted:     #6e6d68;
+  --accent:         #1c5cab;
+  --accent-contrast:#ffffff;
+  --focus:          #2a78d6;
+  --grid:           #e7e5e0;
+
+  /* Categorical series palette - validated for CVD separation and contrast.
+     Light and dark are the same eight hues stepped for each surface. */
+  --series-1: #2a78d6;
+  --series-2: #eb6834;
+  --series-3: #1baf7a;
+  --series-4: #eda100;
+  --series-5: #e87ba4;
+  --series-6: #008300;
+  --series-7: #4a3aa7;
+  --series-8: #e34948;
+
+  --radius: 10px;
+  --shadow: 0 1px 2px rgba(11, 11, 11, .06), 0 1px 8px rgba(11, 11, 11, .04);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --surface-0: #121211;
+    --surface-1: #1a1a19;
+    --surface-2: #232322;
+    --border:    #34342f;
+    --border-strong: #4a4a44;
+    --text-primary:   #f4f4f1;
+    --text-secondary: #c3c2b7;
+    --text-muted:     #97968d;
+    --accent:         #6da7ec;
+    --accent-contrast:#10131a;
+    --focus:          #86b6ef;
+    --grid:           #2c2c29;
+    --series-1: #3987e5;
+    --series-2: #d95926;
+    --series-3: #199e70;
+    --series-4: #c98500;
+    --series-5: #d55181;
+    --series-6: #008300;
+    --series-7: #9085e9;
+    --series-8: #e66767;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .4);
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --surface-0: #121211;
+  --surface-1: #1a1a19;
+  --surface-2: #232322;
+  --border:    #34342f;
+  --border-strong: #4a4a44;
+  --text-primary:   #f4f4f1;
+  --text-secondary: #c3c2b7;
+  --text-muted:     #97968d;
+  --accent:         #6da7ec;
+  --accent-contrast:#10131a;
+  --focus:          #86b6ef;
+  --grid:           #2c2c29;
+  --series-1: #3987e5;
+  --series-2: #d95926;
+  --series-3: #199e70;
+  --series-4: #c98500;
+  --series-5: #d55181;
+  --series-6: #008300;
+  --series-7: #9085e9;
+  --series-8: #e66767;
+  --shadow: 0 1px 2px rgba(0, 0, 0, .4);
+}
+
+/* ----------------------------------------------------------------- base */
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  padding: 0 16px env(safe-area-inset-bottom, 0px);
+  background: var(--surface-0);
+  color: var(--text-primary);
+  font: 400 15px/1.55 Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-feature-settings: "tnum" 1;
+}
+.wrap { max-width: 1160px; margin: 0 auto; padding-block: 20px 48px; }
+h1, h2, h3 { line-height: 1.25; margin: 0; font-weight: 600; letter-spacing: -.01em; }
+a { color: var(--accent); }
+a:hover { text-decoration-thickness: 2px; }
+img { max-width: 100%; }
+[hidden] { display: none !important; }
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+.visually-hidden {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+.skip-link {
+  position: absolute; left: 16px; top: -60px; z-index: 20;
+  background: var(--accent); color: var(--accent-contrast);
+  padding: 10px 14px; border-radius: 8px; text-decoration: none; font-weight: 600;
+}
+.skip-link:focus { top: 12px; }
+
+/* --------------------------------------------------------------- header */
+.masthead {
+  display: flex; flex-wrap: wrap; gap: 12px 20px;
+  align-items: flex-start; justify-content: space-between;
+  padding-block: 8px 18px;
+}
+.masthead h1 { font-size: clamp(1.5rem, 1.2rem + 1.4vw, 2.1rem); }
+.masthead p { margin: 6px 0 0; color: var(--text-secondary); max-width: 62ch; font-size: .95rem; }
+.theme-toggle {
+  flex: none;
+  background: var(--surface-1); color: var(--text-secondary);
+  border: 1px solid var(--border); border-radius: 999px;
+  padding: 7px 14px; font: inherit; font-size: .85rem; cursor: pointer;
+}
+.theme-toggle:hover { border-color: var(--border-strong); color: var(--text-primary); }
+
+/* --------------------------------------------------------- status strip */
+.status {
+  display: flex; flex-wrap: wrap; gap: 6px 18px; align-items: center;
+  background: var(--surface-1); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 11px 16px; margin-bottom: 18px;
+  font-size: .875rem; color: var(--text-secondary);
+}
+.status b { color: var(--text-primary); font-weight: 600; }
+.status .dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--series-3); flex: none;
+}
+.status.is-stale .dot { background: var(--series-4); }
+.status.is-error { border-color: var(--series-8); }
+.status.is-error .dot { background: var(--series-8); }
+
+/* ------------------------------------------------------------- controls */
+.controls {
+  display: grid; gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  background: var(--surface-1); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 16px; margin-bottom: 18px;
+  box-shadow: var(--shadow);
+}
+.field { display: flex; flex-direction: column; gap: 7px; min-width: 0; border: 0; padding: 0; margin: 0; }
+.field > legend, .field > .label {
+  font-size: .78rem; font-weight: 600; letter-spacing: .04em;
+  text-transform: uppercase; color: var(--text-muted); padding: 0;
+}
+.field-wide { grid-column: 1 / -1; }
+select, input[type="search"], input[type="text"] {
+  width: 100%; font: inherit; font-size: .92rem;
+  padding: 9px 10px; color: var(--text-primary);
+  background: var(--surface-1); border: 1px solid var(--border-strong);
+  border-radius: 8px;
+}
+select { appearance: none; padding-right: 30px;
+  background-image: linear-gradient(45deg, transparent 50%, currentColor 50%),
+                    linear-gradient(135deg, currentColor 50%, transparent 50%);
+  background-position: calc(100% - 17px) 55%, calc(100% - 12px) 55%;
+  background-size: 5px 5px, 5px 5px; background-repeat: no-repeat;
+}
+
+/* segmented radio group */
+.segmented { display: flex; flex-wrap: wrap; gap: 4px; background: var(--surface-2);
+  border: 1px solid var(--border); border-radius: 9px; padding: 3px; }
+.segmented label {
+  flex: 1 1 auto; text-align: center; border-radius: 6px; cursor: pointer;
+  padding: 7px 9px; font-size: .87rem; color: var(--text-secondary); white-space: nowrap;
+}
+.segmented input { position: absolute; opacity: 0; pointer-events: none; }
+.segmented label:hover { color: var(--text-primary); }
+.segmented input:checked + span {
+  position: absolute; inset: 0; border-radius: 6px;
+  background: var(--surface-1); border: 1px solid var(--border-strong);
+  box-shadow: var(--shadow); z-index: -1;
+}
+.segmented label { position: relative; z-index: 0; }
+.segmented input:checked ~ .txt { color: var(--text-primary); font-weight: 600; }
+.segmented label:focus-within { outline: 2px solid var(--focus); outline-offset: 1px; }
+
+/* scrollable option list (sites, pathogens) */
+.picker { border: 1px solid var(--border-strong); border-radius: 8px; background: var(--surface-1); overflow: hidden; }
+.picker-search { border: 0; border-bottom: 1px solid var(--border); border-radius: 0; }
+.picker-search:focus-visible { outline-offset: -2px; }
+.picker-list { max-height: 188px; overflow-y: auto; overscroll-behavior: contain; padding: 4px; margin: 0; list-style: none; }
+.picker-list li { margin: 0; }
+.opt { display: flex; gap: 9px; align-items: flex-start; padding: 7px 8px; border-radius: 6px; cursor: pointer; font-size: .9rem; }
+.opt:hover { background: var(--surface-2); }
+.opt input { margin: 3px 0 0; flex: none; accent-color: var(--accent); width: 15px; height: 15px; }
+.opt input:disabled + .opt-text { color: var(--text-muted); }
+.opt:has(input:disabled) { cursor: not-allowed; }
+.opt-text { min-width: 0; }
+.opt-text small { display: block; color: var(--text-muted); font-size: .8rem; }
+.picker-foot {
+  display: flex; gap: 12px; align-items: center; justify-content: space-between;
+  border-top: 1px solid var(--border); padding: 6px 9px;
+  font-size: .78rem; color: var(--text-muted); background: var(--surface-2);
+}
+.picker-foot button {
+  background: none; border: 0; padding: 2px 4px; font: inherit; font-size: .78rem;
+  color: var(--accent); cursor: pointer; text-decoration: underline;
+}
+.picker-empty { padding: 14px 10px; color: var(--text-muted); font-size: .87rem; text-align: center; }
+.check-inline { display: flex; align-items: center; gap: 9px; font-size: .92rem; padding-top: 2px; }
+.check-inline input { accent-color: var(--accent); width: 16px; height: 16px; }
+.hint { font-size: .78rem; color: var(--text-muted); margin: 0; }
+
+/* ---------------------------------------------------------------- cards */
+.cards { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(215px, 1fr)); margin-bottom: 18px; }
+.card {
+  background: var(--surface-1); border: 1px solid var(--border);
+  border-left: 3px solid var(--card-color, var(--border-strong));
+  border-radius: var(--radius); padding: 13px 15px; box-shadow: var(--shadow);
+}
+.card h3 { font-size: .93rem; display: flex; align-items: center; gap: 7px; }
+.card .swatch { width: 10px; height: 10px; border-radius: 3px; background: var(--card-color); flex: none; }
+.card .value { font-size: 1.45rem; font-weight: 600; letter-spacing: -.02em; margin: 7px 0 1px; }
+.card .unit { font-size: .78rem; color: var(--text-muted); font-weight: 400; margin-left: 3px; }
+.card .meta { font-size: .8rem; color: var(--text-muted); }
+.card .trend { display: inline-flex; align-items: center; gap: 5px; font-size: .84rem; font-weight: 500; margin-top: 7px; }
+.card .trend .arrow { font-size: .95rem; line-height: 1; }
+.trend-rising  { color: var(--series-2); }
+.trend-falling { color: var(--series-1); }
+.trend-stable  { color: var(--text-secondary); }
+.trend-none    { color: var(--text-muted); }
+/* .trend is inline-flex, so the level needs its own line explicitly. */
+.card .level { display: block; margin-top: 5px; font-size: .76rem; color: var(--text-muted); }
+
+/* ---------------------------------------------------------------- chart */
+.panel {
+  background: var(--surface-1); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow);
+}
+.panel-head { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: baseline; justify-content: space-between; margin-bottom: 12px; }
+.panel-head h2 { font-size: 1rem; }
+.panel-head p { margin: 2px 0 0; font-size: .82rem; color: var(--text-muted); }
+.chart-box { position: relative; height: 420px; }
+@media (max-width: 720px) { .chart-box { height: 330px; } }
+.chart-msg {
+  position: absolute; inset: 0; display: grid; place-content: center; gap: 8px;
+  text-align: center; padding: 24px; color: var(--text-secondary); font-size: .92rem;
+}
+.chart-msg strong { display: block; color: var(--text-primary); font-size: 1rem; }
+.spinner {
+  width: 26px; height: 26px; margin: 0 auto; border-radius: 50%;
+  border: 3px solid var(--border); border-top-color: var(--accent);
+  animation: spin .9s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .spinner { animation-duration: 3s; } }
+
+.actions { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border); align-items: center; }
+.btn {
+  font: inherit; font-size: .86rem; cursor: pointer;
+  background: var(--surface-2); color: var(--text-primary);
+  border: 1px solid var(--border-strong); border-radius: 8px; padding: 8px 13px;
+}
+.btn:hover { border-color: var(--text-muted); }
+.actions .note { font-size: .8rem; color: var(--text-muted); margin-left: auto; }
+
+details.meta-drawer { margin-top: 18px; background: var(--surface-1); border: 1px solid var(--border); border-radius: var(--radius); }
+details.meta-drawer summary { cursor: pointer; padding: 12px 16px; font-size: .9rem; font-weight: 500; }
+details.meta-drawer summary:focus-visible { outline-offset: -2px; }
+details.meta-drawer .drawer-body { padding: 0 16px 16px; font-size: .87rem; color: var(--text-secondary); }
+.dl { display: grid; grid-template-columns: max-content 1fr; gap: 6px 16px; margin: 0; }
+.dl dt { color: var(--text-muted); }
+.dl dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+
+/* --------------------------------------------------------------- footer */
+footer.site {
+  margin-top: 30px; padding-top: 18px; border-top: 1px solid var(--border);
+  font-size: .84rem; color: var(--text-muted);
+}
+footer.site p { margin: 0 0 9px; max-width: 78ch; }
+footer.site .disclaimer {
+  background: var(--surface-1); border: 1px solid var(--border);
+  border-left: 3px solid var(--series-4);
+  border-radius: 8px; padding: 11px 14px; color: var(--text-secondary);
+}
+@media (max-width: 560px) {
+  .wrap { padding-block: 14px 36px; }
+  .controls { padding: 13px; }
+  .cards { grid-template-columns: 1fr 1fr; gap: 9px; }
+  .card { padding: 11px 12px; }
+  .card .value { font-size: 1.2rem; }
+}
+@media (max-width: 380px) { .cards { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<a class="skip-link" href="#chart-panel">Skip to chart</a>
+<div class="wrap">
+
+  <header class="masthead">
+    <div>
+      <h1>Wastewater Trends</h1>
+      <p>Explore and compare pathogen levels measured in wastewater at treatment
+         plants across the United States, using published WastewaterSCAN data.</p>
+    </div>
+    <button type="button" class="theme-toggle" id="theme-toggle" aria-live="polite">Theme: System</button>
+  </header>
+
+  <div class="status" id="status" role="status">
+    <span class="dot" aria-hidden="true"></span>
+    <span id="status-text">Loading data…</span>
+  </div>
+
+  <form class="controls" id="controls" aria-label="Chart settings">
+    <fieldset class="field field-wide">
+      <legend>Compare</legend>
+      <div class="segmented" id="mode-group" role="radiogroup" aria-label="Comparison mode"></div>
+      <p class="hint" id="mode-hint"></p>
+    </fieldset>
+
+    <div class="field">
+      <label class="label" for="state-select">State</label>
+      <select id="state-select"></select>
+    </div>
+
+    <fieldset class="field" id="site-field">
+      <legend id="site-legend">Site</legend>
+      <div class="picker">
+        <input type="search" class="picker-search" id="site-search"
+               placeholder="Search sites or cities" aria-label="Search sites by name or city" autocomplete="off">
+        <ul class="picker-list" id="site-list"></ul>
+        <div class="picker-foot" id="site-foot"></div>
+      </div>
+    </fieldset>
+
+    <fieldset class="field" id="pathogen-field">
+      <legend id="pathogen-legend">Pathogens</legend>
+      <div class="picker">
+        <input type="search" class="picker-search" id="pathogen-search"
+               placeholder="Search pathogens" aria-label="Search pathogens" autocomplete="off">
+        <ul class="picker-list" id="pathogen-list"></ul>
+        <div class="picker-foot" id="pathogen-foot"></div>
+      </div>
+    </fieldset>
+
+    <div class="field">
+      <label class="label" for="measure-select">Measurement</label>
+      <select id="measure-select"></select>
+      <p class="hint" id="measure-hint"></p>
+    </div>
+
+    <fieldset class="field">
+      <legend>Date range</legend>
+      <div class="segmented" id="range-group" role="radiogroup" aria-label="Date range"></div>
+    </fieldset>
+
+    <fieldset class="field">
+      <legend>Scale</legend>
+      <div class="segmented" id="scale-group" role="radiogroup" aria-label="Value scale"></div>
+      <label class="check-inline">
+        <input type="checkbox" id="avg-toggle">
+        <span>7-day average</span>
+      </label>
+    </fieldset>
+  </form>
+
+  <section class="cards" id="cards" aria-label="Latest measurements" aria-live="polite"></section>
+
+  <section class="panel" id="chart-panel" tabindex="-1" aria-label="Time series chart">
+    <div class="panel-head">
+      <div>
+        <h2 id="chart-title">Wastewater measurements</h2>
+        <p id="chart-subtitle"></p>
+      </div>
+    </div>
+    <div class="chart-box">
+      <canvas id="chart" role="img" aria-label="Time series of wastewater measurements"></canvas>
+      <div class="chart-msg" id="chart-msg">
+        <div class="spinner" aria-hidden="true"></div>
+        <span>Loading surveillance data…</span>
+      </div>
+    </div>
+    <div class="actions">
+      <button type="button" class="btn" id="copy-link">Copy view link</button>
+      <button type="button" class="btn" id="download-csv">Download CSV</button>
+      <span class="note" id="log-note" hidden>Non-detects (zero) cannot be drawn on a logarithmic scale and appear as gaps.</span>
+    </div>
+  </section>
+
+  <details class="meta-drawer">
+    <summary>About this data</summary>
+    <div class="drawer-body">
+      <dl class="dl" id="meta-dl"></dl>
+    </div>
+  </details>
+
+  <footer class="site">
+    <p class="disclaimer">
+      Wastewater measurements reflect community-level trends and should not be
+      interpreted as an individual's risk of infection.
+    </p>
+    <p id="footer-attrib"></p>
+    <p>
+      Source: <a id="footer-source" href="https://data.wastewaterscan.org/" rel="noopener">WastewaterSCAN</a>.
+      <span id="footer-updated"></span>
+    </p>
+    <p>
+      This is an independent, open-source visualization of published WastewaterSCAN
+      data. It is not affiliated with or endorsed by WastewaterSCAN, Stanford
+      University, Emory University, or Verily.
+    </p>
+  </footer>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.5.1/chart.umd.min.js" defer></script>
+<script>
+(function () {
+  "use strict";
+
+  // ===================================================================
+  // Constants. The trend and rolling-average rules are documented in
+  // README.md; keep the two in step if you change anything here.
+  // ===================================================================
+  var DATA_URL = "data.json";
+  var MAX_SERIES = 8;              // matches the categorical palette size
+  var TREND_WINDOW_DAYS = 21;
+  var TREND_MIN_PER_HALF = 2;
+  var TREND_FOLD = 1.5;            // >=1.5x up is rising, <=1/1.5 down is falling
+  var ROLLING_WINDOW_DAYS = 7;
+  var STORAGE_KEY = "wastewater-trends:config";
+  var THEME_KEY = "wastewater-trends:theme";
+  var DAY_MS = 86400000;
+
+  var RANGES = [
+    { id: "30d",  label: "30d",  days: 30 },
+    { id: "90d",  label: "90d",  days: 90 },
+    { id: "1y",   label: "1 yr", days: 365 },
+    { id: "all",  label: "All",  days: null }
+  ];
+  var MODES = [
+    { id: "site",     label: "One site, many pathogens" },
+    { id: "pathogen", label: "One pathogen, many sites" }
+  ];
+  var SCALES = [{ id: "linear", label: "Linear" }, { id: "log", label: "Log" }];
+
+  /* Landing state should show the pathogen most people come for, not whatever
+     sorts first alphabetically. Falls back to the first non-control pathogen
+     if SARS-CoV-2 ever leaves the feed. */
+  var PREFERRED_PATHOGEN = "SC2_N";
+
+  var DEFAULTS = {
+    mode: "site", state: "", sites: [], pathogens: [],
+    measure: "raw", range: "90d", avg: false, scale: "linear"
+  };
+
+  // ===================================================================
+  // Tiny helpers
+  // ===================================================================
+  var $ = function (id) { return document.getElementById(id); };
+
+  function el(tag, className, text) {
+    var node = document.createElement(tag);
+    if (className) node.className = className;
+    if (text != null) node.textContent = text;
+    return node;
+  }
+
+  function cssVar(name) {
+    return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  }
+
+  function storageGet(key) {
+    try { return window.localStorage.getItem(key); } catch (e) { return null; }
+  }
+  function storageSet(key, value) {
+    try { window.localStorage.setItem(key, value); } catch (e) { /* private mode */ }
+  }
+
+  var compactFormatter = new Intl.NumberFormat("en-US", {
+    notation: "compact", maximumSignificantDigits: 3
+  });
+  var plainFormatter = new Intl.NumberFormat("en-US", { maximumSignificantDigits: 3 });
+
+  /* Concentrations span zero to ~1e10, so a single format does not serve both
+     ends. Values are reported to at most three significant digits because the
+     assay does not support more precision than that. */
+  function formatValue(value) {
+    if (value == null || !isFinite(value)) return "—";
+    if (value === 0) return "0";
+    if (Math.abs(value) >= 10000 || Math.abs(value) < 0.01) return compactFormatter.format(value);
+    return plainFormatter.format(value);
+  }
+
+  function formatDate(ms) {
+    return new Date(ms).toLocaleDateString("en-US",
+      { year: "numeric", month: "short", day: "numeric", timeZone: "UTC" });
+  }
+  function formatShortDate(ms) {
+    return new Date(ms).toLocaleDateString("en-US",
+      { month: "short", day: "numeric", timeZone: "UTC" });
+  }
+  function isoDate(ms) { return new Date(ms).toISOString().slice(0, 10); }
+
+  /* Stable 32-bit string hash. Used so a series keeps its colour and marker
+     no matter what else is on the chart - a filter never repaints survivors. */
+  function hashString(text) {
+    var hash = 2166136261;
+    for (var i = 0; i < text.length; i++) {
+      hash ^= text.charCodeAt(i);
+      hash = (hash * 16777619) >>> 0;
+    }
+    return hash;
+  }
+
+  var POINT_STYLES = ["circle", "rect", "triangle", "rectRot",
+                      "star", "crossRot", "rectRounded", "cross"];
+  /* These marker shapes are drawn as strokes rather than fills, so they must
+     be stroked in the series colour. Giving them the surface-coloured ring
+     that separates the filled shapes would make them invisible. */
+  var STROKE_ONLY_STYLES = { star: true, crossRot: true, cross: true };
+
+  /* Assign a colour and a marker shape to each series.
+
+     The slot is chosen from a hash of the series' own identity, so a series
+     keeps its colour as other series come and go - filtering never repaints
+     the survivors. Because a hash alone collides (two of four series landing
+     on the same blue is common), a taken slot is resolved by probing forward.
+     Resolution walks the keys in sorted order, so the result depends only on
+     WHICH series are shown, never on the order they were picked - the same
+     URL always produces the same chart.
+
+     The marker shape is a second, independent channel: it keeps series
+     distinguishable in greyscale, in print, and for readers who cannot rely
+     on hue. */
+  function assignVisuals(keys) {
+    var takenColor = {}, takenStyle = {}, result = {};
+    keys.slice().sort().forEach(function (key) {
+      var colorSlot = hashString(key) % MAX_SERIES;
+      for (var i = 0; i < MAX_SERIES && takenColor[colorSlot]; i++) {
+        colorSlot = (colorSlot + 1) % MAX_SERIES;
+      }
+      takenColor[colorSlot] = true;
+
+      var styleSlot = hashString(key + "#style") % POINT_STYLES.length;
+      for (var j = 0; j < POINT_STYLES.length && takenStyle[styleSlot]; j++) {
+        styleSlot = (styleSlot + 1) % POINT_STYLES.length;
+      }
+      takenStyle[styleSlot] = true;
+
+      result[key] = {
+        color: cssVar("--series-" + (colorSlot + 1)),
+        pointStyle: POINT_STYLES[styleSlot]
+      };
+    });
+    return result;
+  }
+
+  // ===================================================================
+  // State
+  // ===================================================================
+  var data = null;             // parsed data.json
+  var siteById = {};
+  var pathogenById = {};
+  var epochMs = 0;
+  var latestMs = 0;
+  var chart = null;
+  var config = Object.assign({}, DEFAULTS);
+  var lastRendered = [];       // series actually drawn, for CSV export
+
+  // ===================================================================
+  // Config <-> URL <-> localStorage
+  // Priority on load: URL params -> localStorage -> defaults.
+  // ===================================================================
+  function parseList(value) {
+    if (!value) return [];
+    return value.split(",").map(function (s) { return s.trim(); }).filter(Boolean);
+  }
+
+  function readConfig() {
+    var result = Object.assign({}, DEFAULTS);
+    var stored = storageGet(STORAGE_KEY);
+    if (stored) {
+      try {
+        var saved = JSON.parse(stored);
+        if (saved && typeof saved === "object") {
+          Object.keys(DEFAULTS).forEach(function (key) {
+            if (saved[key] !== undefined) result[key] = saved[key];
+          });
+        }
+      } catch (e) { /* corrupt entry - fall through to defaults */ }
+    }
+    var params = new URLSearchParams(window.location.search);
+    if (params.has("mode"))     result.mode = params.get("mode");
+    if (params.has("state"))    result.state = params.get("state");
+    if (params.has("sites"))    result.sites = parseList(params.get("sites"));
+    if (params.has("pathogen")) result.pathogens = parseList(params.get("pathogen"));
+    if (params.has("pathogens"))result.pathogens = parseList(params.get("pathogens"));
+    if (params.has("measure"))  result.measure = params.get("measure");
+    if (params.has("range"))    result.range = params.get("range");
+    if (params.has("avg"))      result.avg = params.get("avg") === "1" || params.get("avg") === "true";
+    if (params.has("scale"))    result.scale = params.get("scale");
+    return result;
+  }
+
+  /* Anything unrecognised - a stale site id, a pathogen that left the feed, a
+     hand-edited range - is dropped silently and replaced with a sane default,
+     so a bad link still produces a working dashboard. */
+  function sanitizeConfig() {
+    if (!MODES.some(function (m) { return m.id === config.mode; })) config.mode = DEFAULTS.mode;
+    if (!RANGES.some(function (r) { return r.id === config.range; })) config.range = DEFAULTS.range;
+    if (!SCALES.some(function (s) { return s.id === config.scale; })) config.scale = DEFAULTS.scale;
+    if (!data.meta.measurements[config.measure]) config.measure = DEFAULTS.measure;
+    config.avg = !!config.avg;
+
+    var states = availableStates();
+    if (config.state && states.indexOf(config.state) === -1) config.state = "";
+
+    config.sites = (config.sites || []).filter(function (id) {
+      return siteById[id] && (!config.state || siteById[id].state === config.state);
+    });
+    config.pathogens = (config.pathogens || []).filter(function (id) { return pathogenById[id]; });
+
+    var maxSites = config.mode === "pathogen" ? MAX_SERIES : 1;
+    var maxPathogens = config.mode === "site" ? MAX_SERIES : 1;
+    config.sites = config.sites.slice(0, maxSites);
+    config.pathogens = config.pathogens.slice(0, maxPathogens);
+
+    if (!config.sites.length) {
+      var candidates = sitesForState();
+      if (candidates.length) config.sites = [candidates[0].id];
+    }
+    if (!config.pathogens.length) {
+      var options = pathogensForSelection();
+      var preferred = options.filter(function (p) { return p.id === PREFERRED_PATHOGEN; })[0];
+      var fallback = options.filter(function (p) { return !p.control; })[0] || options[0];
+      if (preferred || fallback) config.pathogens = [(preferred || fallback).id];
+    }
+  }
+
+  function writeConfig() {
+    var params = new URLSearchParams();
+    params.set("mode", config.mode);
+    if (config.state) params.set("state", config.state);
+    if (config.sites.length) params.set("sites", config.sites.join(","));
+    if (config.pathogens.length) params.set("pathogens", config.pathogens.join(","));
+    params.set("measure", config.measure);
+    params.set("range", config.range);
+    params.set("avg", config.avg ? "1" : "0");
+    params.set("scale", config.scale);
+    history.replaceState(null, "", window.location.pathname + "?" + params.toString());
+    storageSet(STORAGE_KEY, JSON.stringify(config));
+  }
+
+  // ===================================================================
+  // Data selectors
+  // ===================================================================
+  function availableStates() {
+    var seen = {};
+    data.sites.forEach(function (site) { if (site.state) seen[site.state] = true; });
+    return Object.keys(seen).sort();
+  }
+
+  function sitesForState() {
+    return data.sites.filter(function (site) {
+      if (config.state && site.state !== config.state) return false;
+      return !!data.series[site.id];
+    }).sort(function (a, b) {
+      return (a.name || "").localeCompare(b.name || "");
+    });
+  }
+
+  /* In "one pathogen, many sites" mode, only offer pathogens that at least one
+     currently selected site actually measures; otherwise offer everything the
+     selected site has. Prevents choosing a combination with no observations. */
+  function pathogensForSelection() {
+    var relevant = {};
+    var siteIds = config.mode === "pathogen" ? sitesForState().map(function (s) { return s.id; })
+                                             : config.sites;
+    if (!siteIds.length) siteIds = sitesForState().map(function (s) { return s.id; });
+    siteIds.forEach(function (siteId) {
+      var bySite = data.series[siteId];
+      if (!bySite) return;
+      Object.keys(bySite).forEach(function (pid) { relevant[pid] = true; });
+    });
+    return data.pathogens.filter(function (p) { return relevant[p.id]; })
+      .sort(function (a, b) {
+        // Controls (PMMoV) sort last; everything else alphabetically.
+        if (!!a.control !== !!b.control) return a.control ? 1 : -1;
+        return a.label.localeCompare(b.label);
+      });
+  }
+
+  function rangeBounds() {
+    var range = RANGES.filter(function (r) { return r.id === config.range; })[0] || RANGES[1];
+    var end = latestMs;
+    var start = range.days == null ? epochMs : end - range.days * DAY_MS;
+    return { start: Math.max(start, epochMs), end: end };
+  }
+
+  /* Extract [{t, value, category}] for one (site, pathogen) pair inside the
+     current date range and for the currently selected measurement. */
+  function pointsFor(siteId, pathogenId, bounds) {
+    var bySite = data.series[siteId];
+    if (!bySite) return [];
+    var entry = bySite[pathogenId];
+    if (!entry) return [];
+    var values = config.measure === "norm" ? entry.p : entry.v;
+    if (!values) return [];
+    var out = [];
+    for (var i = 0; i < entry.d.length; i++) {
+      var t = epochMs + entry.d[i] * DAY_MS;
+      if (t < bounds.start || t > bounds.end) continue;
+      var value = values[i];
+      if (value == null) continue;
+      out.push({ t: t, value: value, category: entry.c ? entry.c[i] : 0 });
+    }
+    return out;
+  }
+
+  /* Trailing mean over a 7-CALENDAR-day window. Sampling is irregular (most
+     sites report two or three times a week), so a fixed "last 7 points" window
+     would silently span very different amounts of time between sites. No
+     synthetic daily observations are invented: each output point sits on a
+     real sample date. */
+  function rollingAverage(points) {
+    var out = [];
+    var start = 0;
+    var sum = 0;
+    for (var i = 0; i < points.length; i++) {
+      sum += points[i].value;
+      while (points[start].t < points[i].t - (ROLLING_WINDOW_DAYS - 1) * DAY_MS) {
+        sum -= points[start].value;
+        start++;
+      }
+      out.push({ t: points[i].t, value: sum / (i - start + 1), category: points[i].category });
+    }
+    return out;
+  }
+
+  /* Trend over roughly the last three weeks of the visible range.
+     Deliberately NOT a comparison of the last two measurements. See README. */
+  function trendFor(points, bounds) {
+    var windowEnd = bounds.end;
+    var windowStart = windowEnd - TREND_WINDOW_DAYS * DAY_MS;
+    var midpoint = windowStart + (TREND_WINDOW_DAYS / 2) * DAY_MS;
+
+    var early = [], late = [];
+    points.forEach(function (point) {
+      if (point.t < windowStart || point.t > windowEnd) return;
+      (point.t < midpoint ? early : late).push(point.value);
+    });
+    if (early.length < TREND_MIN_PER_HALF || late.length < TREND_MIN_PER_HALF) {
+      return { key: "none", label: "Insufficient data", arrow: "—" };
+    }
+    var mean = function (list) {
+      return list.reduce(function (a, b) { return a + b; }, 0) / list.length;
+    };
+    var earlyMean = mean(early), lateMean = mean(late);
+
+    // An entirely non-detected series is not "stable" in any useful sense -
+    // there is no signal to be stable. Say so plainly instead.
+    if (earlyMean === 0 && lateMean === 0) {
+      return { key: "none", label: "No detections", arrow: "—" };
+    }
+    if (earlyMean === 0) return { key: "rising", label: "Rising", arrow: "↑" };
+    var ratio = lateMean / earlyMean;
+    if (ratio >= TREND_FOLD) return { key: "rising", label: "Rising", arrow: "↑" };
+    if (ratio <= 1 / TREND_FOLD) return { key: "falling", label: "Falling", arrow: "↓" };
+    return { key: "stable", label: "Stable", arrow: "→" };
+  }
+
+  /* The list of series the current configuration asks for. */
+  function buildSeries() {
+    var bounds = rangeBounds();
+    var out = [];
+    var pairs = [];
+    if (config.mode === "site") {
+      var siteId = config.sites[0];
+      config.pathogens.forEach(function (pid) { pairs.push([siteId, pid]); });
+    } else {
+      var pathogenId = config.pathogens[0];
+      config.sites.forEach(function (sid) { pairs.push([sid, pathogenId]); });
+    }
+    var colorKeys = pairs.map(function (pair) {
+      return config.mode === "site" ? pair[1] : pair[0];
+    });
+    var visuals = assignVisuals(colorKeys);
+
+    pairs.forEach(function (pair) {
+      var site = siteById[pair[0]];
+      var pathogen = pathogenById[pair[1]];
+      if (!site || !pathogen) return;
+      var raw = pointsFor(site.id, pathogen.id, bounds);
+      var key = site.id + "|" + pathogen.id;
+      var colorKey = config.mode === "site" ? pathogen.id : site.id;
+      out.push({
+        key: key,
+        colorKey: colorKey,
+        visual: visuals[colorKey],
+        site: site,
+        pathogen: pathogen,
+        label: config.mode === "site" ? pathogen.label : siteLabel(site),
+        points: raw,
+        display: config.avg ? rollingAverage(raw) : raw,
+        trend: trendFor(raw, bounds)
+      });
+    });
+    return { series: out, bounds: bounds };
+  }
+
+  function siteLabel(site) {
+    var place = [site.city, site.state].filter(Boolean).join(", ");
+    return place ? site.name + " — " + place : site.name;
+  }
+
+  // ===================================================================
+  // Controls rendering
+  // ===================================================================
+  function renderSegmented(container, name, options, current, onChange) {
+    container.textContent = "";
+    options.forEach(function (option) {
+      var label = el("label");
+      var input = el("input");
+      input.type = "radio";
+      input.name = name;
+      input.value = option.id;
+      input.checked = option.id === current;
+      input.addEventListener("change", function () { if (input.checked) onChange(option.id); });
+      var marker = el("span");
+      var text = el("span", "txt", option.label);
+      label.appendChild(input);
+      label.appendChild(marker);
+      label.appendChild(text);
+      container.appendChild(label);
+    });
+  }
+
+  /* One renderer for both pickers. `multiple` decides checkbox vs radio, so
+     the two comparison modes share all of the behaviour. */
+  function renderPicker(opts) {
+    var list = opts.list;
+    var foot = opts.foot;
+    var query = (opts.search.value || "").trim().toLowerCase();
+    var items = opts.items.filter(function (item) {
+      return !query || opts.searchText(item).toLowerCase().indexOf(query) !== -1;
+    });
+
+    list.textContent = "";
+    if (!items.length) {
+      var empty = el("li");
+      empty.appendChild(el("div", "picker-empty",
+        opts.items.length ? "No matches for “" + opts.search.value + "”." : opts.emptyText));
+      list.appendChild(empty);
+    }
+
+    var atLimit = opts.multiple && opts.selected.length >= MAX_SERIES;
+    items.forEach(function (item) {
+      var checked = opts.selected.indexOf(item.id) !== -1;
+      var li = el("li");
+      var label = el("label", "opt");
+      var input = el("input");
+      input.type = opts.multiple ? "checkbox" : "radio";
+      input.name = opts.name;
+      input.value = item.id;
+      input.checked = checked;
+      input.disabled = atLimit && !checked;
+      input.addEventListener("change", function () { opts.onToggle(item.id, input.checked); });
+      var text = el("span", "opt-text");
+      text.appendChild(document.createTextNode(opts.primary(item)));
+      var secondary = opts.secondary(item);
+      if (secondary) text.appendChild(el("small", null, secondary));
+      label.appendChild(input);
+      label.appendChild(text);
+      li.appendChild(label);
+      list.appendChild(li);
+    });
+
+    foot.textContent = "";
+    var count = el("span", null, opts.multiple
+      ? opts.selected.length + " of " + MAX_SERIES + " selected"
+      : items.length + (items.length === 1 ? " option" : " options"));
+    foot.appendChild(count);
+    if (opts.multiple) {
+      var clear = el("button", null, "Clear");
+      clear.type = "button";
+      clear.addEventListener("click", opts.onClear);
+      foot.appendChild(clear);
+    }
+  }
+
+  function renderControls() {
+    var maxSites = config.mode === "pathogen" ? MAX_SERIES : 1;
+    var maxPathogens = config.mode === "site" ? MAX_SERIES : 1;
+
+    renderSegmented($("mode-group"), "mode", MODES, config.mode, function (value) {
+      config.mode = value;
+      // Collapse the newly single-valued dimension to its first entry.
+      if (value === "site") config.sites = config.sites.slice(0, 1);
+      else config.pathogens = config.pathogens.slice(0, 1);
+      refresh();
+    });
+    $("mode-hint").textContent = config.mode === "site"
+      ? "Pick one site and up to " + MAX_SERIES + " pathogens measured there."
+      : "Pick one pathogen and up to " + MAX_SERIES + " sites to compare.";
+
+    // --- state
+    var stateSelect = $("state-select");
+    var states = availableStates();
+    stateSelect.textContent = "";
+    var allOption = el("option", null, "All states");
+    allOption.value = "";
+    stateSelect.appendChild(allOption);
+    states.forEach(function (state) {
+      var option = el("option", null, state);
+      option.value = state;
+      stateSelect.appendChild(option);
+    });
+    stateSelect.value = config.state;
+
+    // --- sites
+    $("site-legend").textContent = maxSites > 1 ? "Sites" : "Site";
+    var siteOptions = sitesForState();
+    renderPicker({
+      list: $("site-list"), foot: $("site-foot"), search: $("site-search"),
+      name: "site", multiple: maxSites > 1, selected: config.sites, items: siteOptions,
+      emptyText: "No sites with data in this state.",
+      searchText: function (s) { return [s.name, s.plant, s.city, s.state].filter(Boolean).join(" "); },
+      primary: function (s) { return s.name; },
+      secondary: function (s) { return [s.city, s.state].filter(Boolean).join(", "); },
+      onToggle: function (id, checked) {
+        if (maxSites > 1) {
+          config.sites = checked
+            ? config.sites.concat([id]).slice(0, MAX_SERIES)
+            : config.sites.filter(function (x) { return x !== id; });
+        } else {
+          config.sites = [id];
+        }
+        refresh();
+      },
+      onClear: function () { config.sites = []; refresh(); }
+    });
+
+    // --- pathogens
+    $("pathogen-legend").textContent = maxPathogens > 1 ? "Pathogens" : "Pathogen";
+    var pathogenOptions = pathogensForSelection();
+    renderPicker({
+      list: $("pathogen-list"), foot: $("pathogen-foot"), search: $("pathogen-search"),
+      name: "pathogen", multiple: maxPathogens > 1, selected: config.pathogens, items: pathogenOptions,
+      emptyText: "No pathogens measured at this selection.",
+      searchText: function (p) { return p.label + " " + p.id; },
+      primary: function (p) { return p.label; },
+      secondary: function (p) { return p.control ? "Normalization control" : p.id; },
+      onToggle: function (id, checked) {
+        if (maxPathogens > 1) {
+          config.pathogens = checked
+            ? config.pathogens.concat([id]).slice(0, MAX_SERIES)
+            : config.pathogens.filter(function (x) { return x !== id; });
+        } else {
+          config.pathogens = [id];
+        }
+        refresh();
+      },
+      onClear: function () { config.pathogens = []; refresh(); }
+    });
+
+    // --- measurement
+    var measureSelect = $("measure-select");
+    measureSelect.textContent = "";
+    Object.keys(data.meta.measurements).forEach(function (key) {
+      var measurement = data.meta.measurements[key];
+      var option = el("option", null, measurement.label);
+      option.value = key;
+      measureSelect.appendChild(option);
+    });
+    measureSelect.value = config.measure;
+    $("measure-hint").textContent = data.meta.measurements[config.measure].description;
+
+    renderSegmented($("range-group"), "range", RANGES, config.range, function (value) {
+      config.range = value; refresh();
+    });
+    renderSegmented($("scale-group"), "scale", SCALES, config.scale, function (value) {
+      config.scale = value; refresh();
+    });
+    $("avg-toggle").checked = config.avg;
+  }
+
+  // ===================================================================
+  // Cards + chart
+  // ===================================================================
+  function renderCards(series) {
+    var container = $("cards");
+    container.textContent = "";
+    series.forEach(function (item) {
+      var color = item.visual.color;
+      var card = el("article", "card");
+      card.style.setProperty("--card-color", color);
+
+      var heading = el("h3");
+      var swatch = el("span", "swatch");
+      swatch.setAttribute("aria-hidden", "true");
+      heading.appendChild(swatch);
+      heading.appendChild(document.createTextNode(item.label));
+      card.appendChild(heading);
+
+      var latest = item.points.length ? item.points[item.points.length - 1] : null;
+      var measurement = data.meta.measurements[config.measure];
+
+      var value = el("div", "value");
+      if (latest) {
+        value.appendChild(document.createTextNode(formatValue(latest.value)));
+        value.appendChild(el("span", "unit", measurement.short_unit));
+      } else {
+        value.textContent = "No data";
+      }
+      card.appendChild(value);
+
+      card.appendChild(el("div", "meta",
+        latest ? "Sampled " + formatDate(latest.t) : "None in this range"));
+
+      // Trend is arrow + words, never colour alone.
+      var trend = el("div", "trend trend-" + item.trend.key);
+      trend.appendChild(el("span", "arrow", item.trend.arrow));
+      trend.appendChild(document.createTextNode(item.trend.label));
+      card.appendChild(trend);
+
+      if (latest && latest.category) {
+        card.appendChild(el("span", "level",
+          "WastewaterSCAN level: " + data.meta.categories[latest.category]));
+      }
+      container.appendChild(card);
+    });
+  }
+
+  function showMessage(title, detail) {
+    var box = $("chart-msg");
+    box.textContent = "";
+    box.hidden = false;
+    if (title) box.appendChild(el("strong", null, title));
+    if (detail) box.appendChild(el("span", null, detail));
+    if (chart) { chart.destroy(); chart = null; }
+  }
+
+  /* Chart.js's linear axis needs no date adapter, so the page carries one
+     dependency instead of three. These are the tick positions a date axis
+     would pick: a round day / week / month / year step near the target count. */
+  function dateTicks(minMs, maxMs, target) {
+    var span = Math.max(maxMs - minMs, DAY_MS);
+    var days = span / DAY_MS;
+    var ticks = [];
+    var cursor;
+
+    if (days <= target * 1.5) {
+      var stepDays = Math.max(1, Math.ceil(days / target));
+      cursor = Math.ceil(minMs / DAY_MS) * DAY_MS;
+      for (; cursor <= maxMs; cursor += stepDays * DAY_MS) ticks.push(cursor);
+      return ticks;
+    }
+    if (days <= target * 10) {
+      var weeks = Math.max(1, Math.round(days / 7 / target));
+      cursor = Math.ceil(minMs / DAY_MS) * DAY_MS;
+      var date = new Date(cursor);
+      date.setUTCDate(date.getUTCDate() + ((7 - date.getUTCDay()) % 7)); // next Sunday
+      for (cursor = date.getTime(); cursor <= maxMs; cursor += weeks * 7 * DAY_MS) ticks.push(cursor);
+      return ticks;
+    }
+    var months = Math.max(1, Math.round(days / 30 / target));
+    var walker = new Date(minMs);
+    walker = new Date(Date.UTC(walker.getUTCFullYear(), walker.getUTCMonth(), 1));
+    while (walker.getTime() < minMs) walker.setUTCMonth(walker.getUTCMonth() + 1);
+    while (walker.getTime() <= maxMs) {
+      ticks.push(walker.getTime());
+      walker.setUTCMonth(walker.getUTCMonth() + months);
+    }
+    return ticks;
+  }
+
+  function renderChart(series, bounds) {
+    var canvas = $("chart");
+    var measurement = data.meta.measurements[config.measure];
+    var isLog = config.scale === "log";
+
+    var withData = series.filter(function (item) { return item.display.length > 0; });
+    if (!withData.length) {
+      showMessage("Nothing to plot",
+        series.length
+          ? "The selected combination has no observations in this date range. Try a wider range or another site."
+          : "Select at least one site and one pathogen.");
+      $("log-note").hidden = true;
+      return;
+    }
+
+    /* A logarithmic axis cannot represent zero. Non-detects are dropped to
+       null (drawn as a gap) rather than nudged to a fake small number, which
+       would invent a detection that did not happen. */
+    var droppedZeros = 0;
+    var datasets = withData.map(function (item) {
+      var color = item.visual.color;
+      var strokeOnly = !!STROKE_ONLY_STYLES[item.visual.pointStyle];
+      var points = item.display.map(function (point) {
+        var value = point.value;
+        if (isLog && !(value > 0)) { droppedZeros++; value = null; }
+        return { x: point.t, y: value };
+      });
+      return {
+        label: item.label,
+        data: points,
+        borderColor: color,
+        backgroundColor: color,
+        pointBackgroundColor: color,
+        pointBorderColor: strokeOnly ? color : cssVar("--surface-1"),
+        pointBorderWidth: strokeOnly ? 2 : 1,
+        borderWidth: 2,
+        pointRadius: points.length > 120 ? 0 : 3,
+        pointHoverRadius: 6,
+        pointStyle: item.visual.pointStyle,
+        tension: 0.18,
+        spanGaps: false
+      };
+    });
+
+    $("log-note").hidden = !(isLog && droppedZeros > 0);
+
+    var textColor = cssVar("--text-secondary");
+    var gridColor = cssVar("--grid");
+    var ticks = dateTicks(bounds.start, bounds.end, window.innerWidth < 640 ? 4 : 7);
+
+    var options = {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? false : { duration: 260 },
+      interaction: { mode: "nearest", axis: "x", intersect: false },
+      layout: { padding: { top: 4, right: 6 } },
+      scales: {
+        x: {
+          type: "linear",
+          min: bounds.start,
+          max: bounds.end,
+          afterBuildTicks: function (axis) {
+            axis.ticks = ticks.map(function (value) { return { value: value }; });
+          },
+          ticks: {
+            color: textColor,
+            maxRotation: 0,
+            autoSkip: false,
+            callback: function (value) { return formatShortDate(value); }
+          },
+          grid: { color: gridColor, drawTicks: false, borderDash: [] },
+          border: { color: gridColor }
+        },
+        y: {
+          type: isLog ? "logarithmic" : "linear",
+          beginAtZero: !isLog,
+          title: {
+            display: true,
+            text: measurement.label + " (" + measurement.unit + ")",
+            color: textColor,
+            font: { size: 11 }
+          },
+          ticks: { color: textColor, callback: function (value) { return formatValue(value); } },
+          grid: { color: gridColor, drawTicks: false, borderDash: [] },
+          border: { color: gridColor }
+        }
+      },
+      plugins: {
+        legend: {
+          display: true,
+          position: "bottom",
+          labels: {
+            color: cssVar("--text-primary"),
+            usePointStyle: true,
+            pointStyleWidth: 12,
+            boxHeight: 8,
+            padding: 14,
+            font: { size: 12 }
+          }
+        },
+        tooltip: {
+          backgroundColor: cssVar("--surface-1"),
+          titleColor: cssVar("--text-primary"),
+          bodyColor: cssVar("--text-secondary"),
+          borderColor: cssVar("--border-strong"),
+          borderWidth: 1,
+          padding: 10,
+          displayColors: true,
+          usePointStyle: true,
+          callbacks: {
+            title: function (items) { return items.length ? formatDate(items[0].parsed.x) : ""; },
+            label: function (item) {
+              return item.dataset.label + ": " + formatValue(item.parsed.y) + " " + measurement.short_unit;
+            }
+          }
+        }
+      }
+    };
+
+    if (chart) chart.destroy();
+    chart = new Chart(canvas, { type: "line", data: { datasets: datasets }, options: options });
+    $("chart-msg").hidden = true;
+
+    canvas.setAttribute("aria-label",
+      "Time series of " + measurement.label.toLowerCase() + " for " +
+      withData.map(function (item) { return item.label; }).join(", ") +
+      " from " + formatDate(bounds.start) + " to " + formatDate(bounds.end) + ".");
+  }
+
+  function renderHeadings(series, bounds) {
+    var measurement = data.meta.measurements[config.measure];
+    var title, subtitle;
+    if (config.mode === "site") {
+      var site = siteById[config.sites[0]];
+      title = site ? siteLabel(site) : "Wastewater measurements";
+    } else {
+      var pathogen = pathogenById[config.pathogens[0]];
+      title = pathogen ? pathogen.label + " across sites" : "Wastewater measurements";
+    }
+    subtitle = measurement.label + " · " + formatDate(bounds.start) + " – " + formatDate(bounds.end) +
+      (config.avg ? " · 7-day average" : "") + (config.scale === "log" ? " · log scale" : "");
+    $("chart-title").textContent = title;
+    $("chart-subtitle").textContent = subtitle;
+  }
+
+  // ===================================================================
+  // Export
+  // ===================================================================
+  function csvCell(value) {
+    var text = value == null ? "" : String(value);
+    return /[",\n]/.test(text) ? '"' + text.replace(/"/g, '""') + '"' : text;
+  }
+
+  function downloadCsv() {
+    if (!lastRendered.length) return;
+    var measurement = data.meta.measurements[config.measure];
+    var rows = [[
+      "date", "site_id", "site_name", "city", "state",
+      "pathogen_id", "pathogen", "value", "unit", "level"
+    ]];
+    lastRendered.forEach(function (item) {
+      item.points.forEach(function (point) {
+        rows.push([
+          isoDate(point.t), item.site.id, item.site.name, item.site.city, item.site.state,
+          item.pathogen.id, item.pathogen.label, point.value, measurement.unit,
+          point.category ? data.meta.categories[point.category] : ""
+        ]);
+      });
+    });
+    var csv = rows.map(function (row) { return row.map(csvCell).join(","); }).join("\n") + "\n";
+    var blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    var url = URL.createObjectURL(blob);
+    var link = document.createElement("a");
+    link.href = url;
+    link.download = "wastewater-trends-" + isoDate(Date.now()) + ".csv";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+  }
+
+  function flash(button, text) {
+    var original = button.dataset.original || button.textContent;
+    button.dataset.original = original;
+    button.textContent = text;
+    setTimeout(function () { button.textContent = original; }, 1600);
+  }
+
+  // ===================================================================
+  // Orchestration
+  // ===================================================================
+  function refresh() {
+    sanitizeConfig();
+    writeConfig();
+    renderControls();
+    var built = buildSeries();
+    lastRendered = built.series.filter(function (item) { return item.points.length > 0; });
+    renderHeadings(built.series, built.bounds);
+    renderCards(built.series);
+    renderChart(built.series, built.bounds);
+  }
+
+  function renderStatus() {
+    var latest = data.meta.latest_sample_date;
+    var ageDays = Math.round((Date.now() - Date.parse(latest + "T00:00:00Z")) / DAY_MS);
+    var status = $("status");
+    status.classList.toggle("is-stale", ageDays > 14);
+    $("status-text").textContent =
+      "Data through " + formatDate(Date.parse(latest + "T00:00:00Z")) +
+      " · " + data.meta.counts.sites + " sites · " + data.meta.counts.pathogens + " pathogens · " +
+      data.meta.counts.observations.toLocaleString("en-US") + " measurements" +
+      (ageDays > 14 ? " · newest sample is " + ageDays + " days old" : "");
+  }
+
+  function renderMetaDrawer() {
+    var source = data.meta.source || {};
+    var pairs = [
+      ["Provider", source.provider],
+      ["Dataset", source.dataset],
+      ["Source", source.dashboard_url],
+      ["Licence", source.license],
+      ["Update frequency", source.update_frequency],
+      ["Newest sample", data.meta.latest_sample_date],
+      ["History retained", data.meta.retention_note],
+      ["Measurement", data.meta.measurements[config.measure].description]
+    ];
+    var dl = $("meta-dl");
+    dl.textContent = "";
+    pairs.forEach(function (pair) {
+      if (!pair[1]) return;
+      dl.appendChild(el("dt", null, pair[0]));
+      var dd = el("dd");
+      if (typeof pair[1] === "string" && pair[1].indexOf("http") === 0) {
+        var link = el("a", null, pair[1]);
+        link.href = pair[1];
+        link.rel = "noopener";
+        dd.appendChild(link);
+      } else {
+        dd.textContent = pair[1];
+      }
+      dl.appendChild(dd);
+    });
+
+    $("footer-attrib").textContent = source.attribution || "";
+    if (source.dashboard_url) $("footer-source").href = source.dashboard_url;
+    $("footer-updated").textContent = "Data through " + data.meta.latest_sample_date + ".";
+  }
+
+  // --- theme -------------------------------------------------------
+  function applyTheme(theme) {
+    if (theme === "light" || theme === "dark") {
+      document.documentElement.setAttribute("data-theme", theme);
+    } else {
+      document.documentElement.removeAttribute("data-theme");
+    }
+    $("theme-toggle").textContent = "Theme: " + (theme === "light" ? "Light" : theme === "dark" ? "Dark" : "System");
+    storageSet(THEME_KEY, theme);
+  }
+
+  function initTheme() {
+    var saved = storageGet(THEME_KEY) || "system";
+    applyTheme(saved);
+    $("theme-toggle").addEventListener("click", function () {
+      var order = ["system", "light", "dark"];
+      var current = storageGet(THEME_KEY) || "system";
+      applyTheme(order[(order.indexOf(current) + 1) % order.length]);
+      if (data) refresh();   // re-read the CSS colour tokens
+    });
+  }
+
+  function fail(title, detail) {
+    var status = $("status");
+    status.classList.add("is-error");
+    $("status-text").textContent = title;
+    showMessage(title, detail);
+  }
+
+  function bindStaticHandlers() {
+    $("state-select").addEventListener("change", function (event) {
+      config.state = event.target.value;
+      config.sites = [];            // previous site may not be in this state
+      $("site-search").value = "";
+      refresh();
+    });
+    $("site-search").addEventListener("input", function () { renderControls(); });
+    $("pathogen-search").addEventListener("input", function () { renderControls(); });
+    $("avg-toggle").addEventListener("change", function (event) {
+      config.avg = event.target.checked; refresh();
+    });
+    $("measure-select").addEventListener("change", function (event) {
+      config.measure = event.target.value; refresh();
+    });
+    $("controls").addEventListener("submit", function (event) { event.preventDefault(); });
+    $("copy-link").addEventListener("click", function () {
+      var button = this;
+      var url = window.location.href;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url)
+          .then(function () { flash(button, "Link copied"); })
+          .catch(function () { flash(button, "Press Ctrl/Cmd+C"); });
+      } else {
+        flash(button, "Copy from the address bar");
+      }
+    });
+    $("download-csv").addEventListener("click", downloadCsv);
+    window.addEventListener("popstate", function () {
+      config = readConfig();
+      refresh();
+    });
+  }
+
+  function start() {
+    initTheme();
+    if (typeof Chart === "undefined") {
+      fail("Chart library unavailable",
+        "Chart.js could not be loaded from the CDN. Check your network connection and reload.");
+      return;
+    }
+    Chart.defaults.font.family =
+      'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
+
+    fetch(DATA_URL, { cache: "no-cache" })
+      .then(function (response) {
+        if (!response.ok) throw new Error("HTTP " + response.status);
+        return response.json();
+      })
+      .then(function (payload) {
+        if (!payload || !payload.meta || !payload.sites || !payload.pathogens || !payload.series) {
+          throw new Error("unexpected shape");
+        }
+        if (!payload.sites.length || !payload.pathogens.length) {
+          throw new Error("empty dataset");
+        }
+        data = payload;
+        data.sites.forEach(function (site) { siteById[site.id] = site; });
+        data.pathogens.forEach(function (pathogen) { pathogenById[pathogen.id] = pathogen; });
+        epochMs = Date.parse(data.meta.epoch + "T00:00:00Z");
+        latestMs = Date.parse(data.meta.latest_sample_date + "T00:00:00Z");
+
+        config = readConfig();
+        renderStatus();
+        bindStaticHandlers();
+        refresh();
+        renderMetaDrawer();
+      })
+      .catch(function (error) {
+        var detail = String(error && error.message || error);
+        if (detail.indexOf("HTTP") === 0) {
+          fail("Could not load the dataset",
+            "data.json returned " + detail + ". If you are running this locally, serve the " +
+            "docs folder over HTTP rather than opening the file directly.");
+        } else if (detail.indexOf("JSON") !== -1 || detail === "unexpected shape") {
+          fail("The dataset could not be read",
+            "data.json is missing or malformed. Re-run scripts/build_data.py to rebuild it.");
+        } else if (detail === "empty dataset") {
+          fail("The dataset is empty",
+            "data.json contains no sites or pathogens. Re-run scripts/build_data.py.");
+        } else {
+          fail("Could not load the dataset", detail);
+        }
+      });
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", start);
+  } else {
+    start();
+  }
+})();
+</script>
+</body>
+</html>

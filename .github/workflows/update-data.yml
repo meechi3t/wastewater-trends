@@ -1,0 +1,73 @@
+name: Update data
+
+on:
+  schedule:
+    # 09:20 UTC daily. Upstream refreshes in the evening US time; this lands
+    # after it and off the top of the hour, where Actions queues are busiest.
+    - cron: "20 9 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-data
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: python -m pip install --disable-pip-version-check "pandas>=2.0"
+
+      # Build into a scratch directory first. docs/data.json is the last known
+      # good dataset and must not be touched until the new one has passed
+      # every check below.
+      - name: Build dataset (into a staging directory)
+        run: |
+          mkdir -p build
+          python scripts/build_data.py \
+            --out build/data.json \
+            --source-info build/source-info.json
+
+      - name: Validate the new dataset
+        run: |
+          python tests/validate_data.py \
+            --data build/data.json \
+            --previous docs/data.json
+
+      # Only now is it safe to replace the published dataset.
+      - name: Promote the validated dataset
+        run: |
+          mv build/data.json docs/data.json
+          mv build/source-info.json docs/source-info.json
+          rm -rf build
+
+      - name: Commit only if the dataset actually changed
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- docs/data.json; then
+            echo "docs/data.json is unchanged; nothing to commit."
+            # source-info.json carries a retrieval timestamp, so it changes on
+            # every run. Discard it when the data itself did not change, to
+            # avoid a meaningless daily commit.
+            git checkout -- docs/source-info.json
+            exit 0
+          fi
+
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/data.json docs/source-info.json
+          git commit -m "data: update wastewater surveillance dataset"
+          git push

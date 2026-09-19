@@ -1,0 +1,14 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Build scratch (the workflow stages the new dataset here before promoting it)
+build/
+
+# Atomic-write temp files, should never survive a run
+docs/.data-*.tmp
+
+# macOS
+.DS_Store
