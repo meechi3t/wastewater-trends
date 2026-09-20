@@ -116,6 +116,74 @@ ASSAY_DISPLAY_NAMES = {
     "XBB_bkpt": "XBB*",
 }
 
+# WastewaterSCAN groups its pathogens into three categories on its own
+# dashboard. Captured from the dashboard's front-end configuration on
+# 2026-09-19, keyed by upstream assay id. Anything unmapped falls into "Other";
+# PMMoV is the normalization control and gets its own group.
+ASSAY_CATEGORIES = {
+    "Respiratory": [
+        "N Gene", "S Gene", "BA.4 ORF1a Del 141-143", "BA.2 LPPA24S",
+        "Delta 156-157", "HV 69-70 Del", "Omicron Del 143-145", "XBB_bkpt",
+        "BA.2.75_S:147E_S:152R",
+        "Influenza A", "Influenza B", "InfA_H1", "InfA_H3_V2", "InfA_H5",
+        "RSV", "HMPV_4", "EVD68", "HPIV", "Parvo_B19",
+    ],
+    "Gastrointestinal": ["Noro_G2", "Rota", "HAdV_F"],
+    "Other": [
+        "MPXV_G2R_G", "MPXV_dD14-16", "HAV", "C_auris",
+        "MeV_Roy", "WNV", "NDM", "TB_RD9",
+    ],
+}
+CATEGORY_ORDER = ["Respiratory", "Gastrointestinal", "Other", "Control"]
+
+# Display order WITHIN each category, curated by this project so the pathogens
+# people actually come looking for sit at the top of the list rather than
+# wherever the alphabet puts them. Anything not listed sorts after these,
+# alphabetically. This orders the picker; it ranks nothing epidemiologically.
+PATHOGEN_ORDER = [
+    # Respiratory
+    "SC2_N", "Influenza_A", "Influenza_B", "RSV", "HMPV_4", "EV-D68",
+    "HPIV", "Parvo_B19", "InfA_H1", "InfA_H3", "InfA_H5", "SC2_S",
+    # Gastrointestinal
+    "Noro_G2", "Rotavirus", "HAdV_F",
+    # Other
+    "MPXV_G2R", "MPXV_dD14-16", "HAV", "C_auris", "MeV", "WNV", "NDM", "TB_RD9",
+    # Control
+    "PMMoV",
+]
+
+# Plain-English names and search terms, added by THIS PROJECT so that someone
+# searching "covid" or "bird flu" can find the right series. The publisher's
+# own label always stays the primary name shown on screen - these are a
+# secondary line and extra search keys, never a replacement. They are ordinary
+# common names for the organism, not public-health categories or thresholds.
+COMMON_NAMES = {
+    "SC2_N":        ("COVID-19", ["covid", "covid-19", "covid19", "coronavirus", "corona", "sars-cov-2", "sars cov 2"]),
+    "SC2_S":        ("COVID-19 (S gene)", ["covid", "covid-19", "coronavirus", "sars-cov-2", "spike"]),
+    "Influenza_A":  ("Flu A", ["flu", "influenza"]),
+    "Influenza_B":  ("Flu B", ["flu", "influenza"]),
+    "InfA_H1":      ("Seasonal flu H1 marker", ["flu", "influenza", "h1", "h1n1"]),
+    "InfA_H3":      ("Seasonal flu H3 marker", ["flu", "influenza", "h3", "h3n2"]),
+    "InfA_H5":      ("Avian (bird) flu marker", ["bird flu", "avian", "influenza", "h5", "h5n1"]),
+    "RSV":          ("Respiratory syncytial virus", ["rsv", "respiratory syncytial"]),
+    "HMPV_4":       ("hMPV", ["metapneumovirus", "hmpv"]),
+    "EV-D68":       ("Enterovirus D68", ["enterovirus", "evd68", "ev-d68"]),
+    "HPIV":         ("Parainfluenza virus", ["parainfluenza", "hpiv", "croup"]),
+    "Parvo_B19":    ("Parvovirus B19 (fifth disease)", ["parvovirus", "fifth disease", "slapped cheek", "b19"]),
+    "Noro_G2":      ("Norovirus GII (stomach bug)", ["norovirus", "noro", "stomach bug", "stomach flu", "winter vomiting"]),
+    "Rotavirus":    ("Rotavirus", ["rotavirus", "rota"]),
+    "HAdV_F":       ("Adenovirus group F", ["adenovirus", "hadv"]),
+    "MPXV_G2R":     ("Mpox (monkeypox), clade II", ["mpox", "monkeypox"]),
+    "MPXV_dD14-16": ("Mpox (monkeypox), clade Ib", ["mpox", "monkeypox"]),
+    "HAV":          ("Hepatitis A", ["hepatitis", "hep a", "hav"]),
+    "C_auris":      ("Candida auris (drug-resistant yeast)", ["candida", "candida auris", "candidozyma", "c auris", "fungus", "yeast"]),
+    "MeV":          ("Measles", ["measles", "rubeola", "mev"]),
+    "WNV":          ("West Nile virus", ["west nile", "wnv"]),
+    "NDM":          ("NDM antibiotic-resistance gene", ["antibiotic resistance", "antimicrobial resistance", "carbapenem", "superbug", "ndm", "amr"]),
+    "TB_RD9":       ("Tuberculosis", ["tuberculosis", "tb", "mycobacterium"]),
+    "PMMoV":        ("Pepper mild mottle virus - fecal-strength control", ["pmmov", "control", "normalization", "pepper"]),
+}
+
 # The two measurements published to the browser. They are NOT interchangeable
 # and the dashboard never plots them on one axis.
 MEASUREMENTS = {
@@ -451,9 +519,14 @@ def _pathogen_records(assays: pd.DataFrame, observations: pd.DataFrame) -> pd.Da
     """One row per public pathogen id, labelled with the publisher's own name."""
     # When several assays feed one pathogen, label it from the most recently
     # used assay so the name tracks the current chemistry.
+    latest_date = {}
     if observations.empty:
         latest_assay = {}
     else:
+        latest_date = {
+            pid: ts.date().isoformat()
+            for pid, ts in observations.groupby("pathogen_id")["date"].max().items()
+        }
         newest = observations.groupby(["pathogen_id", "assay"])["date"].max().reset_index()
         newest = newest.sort_values(["pathogen_id", "date"])
         latest_assay = dict(
@@ -478,21 +551,37 @@ def _pathogen_records(assays: pd.DataFrame, observations: pd.DataFrame) -> pd.Da
             ),
             record["suggested_label"],
         )
+        is_control = pathogen_id == "PMMoV"
+        common, aliases = COMMON_NAMES.get(pathogen_id, (None, []))
         rows.append(
             {
                 "pathogen_id": pathogen_id,
                 "label": label,
+                "common": common,
+                "aliases": aliases,
+                "category": "Control" if is_control else _category_for(group["assay"]),
+                "order": (PATHOGEN_ORDER.index(pathogen_id)
+                          if pathogen_id in PATHOGEN_ORDER else 999),
                 # PMMoV is the fecal-strength normalization control, not a
                 # pathogen. It is published because it is real data and useful
                 # context, but the dashboard labels it as a control.
-                "is_control": pathogen_id == "PMMoV",
+                "is_control": is_control,
                 "assays": sorted(group["assay"]),
+                "latest": latest_date.get(pathogen_id),
                 "target": record["target"],
                 "gene": record["gene"],
                 "reference": record["reference"],
             }
         )
     return pd.DataFrame(rows)
+
+
+def _category_for(assays) -> str:
+    """Map a pathogen's assays to WastewaterSCAN's own category."""
+    for category, members in ASSAY_CATEGORIES.items():
+        if any(assay in members for assay in assays):
+            return category
+    return "Other"
 
 
 # --------------------------------------------------------------------------
@@ -612,7 +701,12 @@ def build_compact_json(observations: pd.DataFrame, sites: pd.DataFrame,
             {
                 "id": record["pathogen_id"],
                 "label": record["label"],
+                "common": _clean(record["common"]),
+                "aliases": record["aliases"],
+                "category": record["category"],
+                "order": int(record["order"]),
                 "control": bool(record["is_control"]),
+                "latest": _clean(record["latest"]),
                 "assays": record["assays"],
                 "target": _clean(record["target"]),
                 "gene": _clean(record["gene"]),
@@ -633,6 +727,7 @@ def build_compact_json(observations: pd.DataFrame, sites: pd.DataFrame,
             "latest_sample_date": latest.date().isoformat(),
             "measurements": MEASUREMENTS,
             "categories": CATEGORIES,
+            "pathogen_groups": CATEGORY_ORDER,
             "counts": {
                 "sites": len(site_records),
                 "pathogens": len(pathogen_records),

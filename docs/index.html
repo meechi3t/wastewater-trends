@@ -138,6 +138,7 @@ img { max-width: 100%; }
   border: 1px solid var(--border); border-radius: 999px;
   padding: 7px 14px; font: inherit; font-size: .85rem; cursor: pointer;
 }
+.head-actions { display: flex; gap: 8px; flex-wrap: wrap; flex: none; }
 .theme-toggle:hover { border-color: var(--border-strong); color: var(--text-primary); }
 
 /* --------------------------------------------------------- status strip */
@@ -289,6 +290,93 @@ details.meta-drawer .drawer-body { padding: 0 16px 16px; font-size: .87rem; colo
 .dl dt { color: var(--text-muted); }
 .dl dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
 
+/* ------------------------------------------------------------ onboarding */
+dialog#onboard {
+  width: min(640px, calc(100vw - 32px));
+  padding: 0; border: 1px solid var(--border); border-radius: 14px;
+  background: var(--surface-1); color: var(--text-primary);
+  box-shadow: 0 18px 48px rgba(0,0,0,.22);
+}
+dialog#onboard::backdrop { background: rgba(10,10,10,.55); }
+/* Keep the title and the buttons pinned while long content scrolls between
+   them, so the dialog is usable on a short window or a phone. */
+dialog#onboard[open] { display: flex; flex-direction: column; max-height: min(86vh, 760px); }
+.onboard-head, .onboard-foot { flex: none; }
+.onboard-body { flex: 1 1 auto; overflow-y: auto; overscroll-behavior: contain; }
+.onboard-head { padding: 22px 24px 0; }
+.onboard-head h2 { font-size: 1.3rem; }
+.onboard-head p { margin: 8px 0 0; color: var(--text-secondary); font-size: .94rem; }
+.onboard-body { padding: 18px 24px 4px; }
+.steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; }
+.steps li { display: grid; grid-template-columns: 26px 1fr; gap: 12px; align-items: start; }
+.steps .num {
+  width: 26px; height: 26px; border-radius: 50%;
+  background: var(--accent); color: var(--accent-contrast);
+  display: grid; place-items: center; font-size: .8rem; font-weight: 700;
+}
+.steps b { display: block; font-size: .95rem; }
+.steps span.d { color: var(--text-secondary); font-size: .88rem; }
+/* The step title is the only block <b>; bold words inside the description
+   must stay inline. */
+.steps span.d b { display: inline; font-size: inherit; }
+.tips { margin: 18px 0 0; padding: 13px 15px; background: var(--surface-2);
+  border: 1px solid var(--border); border-radius: 9px; }
+.tips h3 { font-size: .8rem; text-transform: uppercase; letter-spacing: .04em;
+  color: var(--text-muted); margin-bottom: 8px; }
+.tips ul { margin: 0; padding-left: 18px; font-size: .88rem; color: var(--text-secondary); }
+.tips li + li { margin-top: 5px; }
+.tips code { background: var(--surface-1); border: 1px solid var(--border);
+  border-radius: 4px; padding: 1px 5px; font-size: .85em; }
+.onboard-note {
+  margin: 16px 0 0; padding: 11px 14px; font-size: .86rem;
+  background: var(--surface-2); border: 1px solid var(--border);
+  border-left: 3px solid var(--series-4); border-radius: 8px;
+  color: var(--text-secondary);
+}
+.onboard-foot {
+  display: flex; flex-wrap: wrap; gap: 10px; justify-content: flex-end;
+  padding: 18px 24px 22px; margin-top: 4px;
+}
+.btn-primary {
+  background: var(--accent); color: var(--accent-contrast);
+  border-color: transparent; font-weight: 600;
+}
+.btn-primary:hover { filter: brightness(1.08); border-color: transparent; }
+@media (max-width: 560px) {
+  .onboard-foot { justify-content: stretch; }
+  .onboard-foot .btn { flex: 1 1 auto; }
+}
+
+/* picker group headings + availability */
+.picker-group {
+  position: sticky; top: 0; z-index: 1;
+  padding: 7px 9px 5px; margin: 2px 0 0;
+  font-size: .72rem; font-weight: 700; letter-spacing: .05em;
+  text-transform: uppercase; color: var(--text-muted);
+  background: var(--surface-1); border-bottom: 1px solid var(--border);
+}
+.opt-text em { font-style: normal; color: var(--text-muted); }
+.opt.is-stale .opt-text > :first-child { color: var(--text-secondary); }
+.badge-stale {
+  display: inline-block; margin-left: 6px; padding: 1px 6px;
+  font-size: .68rem; border-radius: 999px; vertical-align: 1px;
+  background: var(--surface-2); border: 1px solid var(--border); color: var(--text-muted);
+}
+
+/* inline suggestion bar */
+.suggest {
+  display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center;
+  margin: 0 0 12px; padding: 9px 13px; font-size: .85rem;
+  background: var(--surface-2); border: 1px solid var(--border);
+  border-left: 3px solid var(--accent); border-radius: 8px;
+  color: var(--text-secondary);
+}
+.suggest button {
+  font: inherit; font-size: .83rem; font-weight: 600; cursor: pointer;
+  background: none; border: 0; padding: 2px 4px; color: var(--accent);
+  text-decoration: underline;
+}
+
 /* --------------------------------------------------------------- footer */
 footer.site {
   margin-top: 30px; padding-top: 18px; border-top: 1px solid var(--border);
@@ -320,7 +408,10 @@ footer.site .disclaimer {
       <p>Explore and compare pathogen levels measured in wastewater at treatment
          plants across the United States, using published WastewaterSCAN data.</p>
     </div>
-    <button type="button" class="theme-toggle" id="theme-toggle" aria-live="polite">Theme: System</button>
+    <div class="head-actions">
+      <button type="button" class="theme-toggle" id="help-button">How to use this</button>
+      <button type="button" class="theme-toggle" id="theme-toggle" aria-live="polite">Theme: System</button>
+    </div>
   </header>
 
   <div class="status" id="status" role="status">
@@ -390,6 +481,7 @@ footer.site .disclaimer {
         <p id="chart-subtitle"></p>
       </div>
     </div>
+    <div class="suggest" id="suggest" hidden></div>
     <div class="chart-box">
       <canvas id="chart" role="img" aria-label="Time series of wastewater measurements"></canvas>
       <div class="chart-msg" id="chart-msg">
@@ -411,6 +503,67 @@ footer.site .disclaimer {
     </div>
   </details>
 
+  <dialog id="onboard" aria-labelledby="onboard-title">
+    <div class="onboard-head">
+      <h2 id="onboard-title">How to use Wastewater Trends</h2>
+      <p>Treatment plants across the United States test their wastewater for
+         viruses and other markers. This site lets you explore those
+         measurements, compare places, and share what you find.</p>
+    </div>
+    <div class="onboard-body">
+      <ol class="steps">
+        <li><span class="num" aria-hidden="true">1</span><span>
+          <b>Pick a place</b>
+          <span class="d">Narrow by state, then choose a treatment plant. The
+            search box matches plant names and cities.</span>
+        </span></li>
+        <li><span class="num" aria-hidden="true">2</span><span>
+          <b>Choose what to compare</b>
+          <span class="d">Either one site with several pathogens, or one pathogen
+            across several sites &mdash; up to 8 lines at a time.</span>
+        </span></li>
+        <li><span class="num" aria-hidden="true">3</span><span>
+          <b>Read the trend</b>
+          <span class="d">Each card shows the most recent measurement and whether
+            it has been rising, falling, or stable over roughly the last three
+            weeks.</span>
+        </span></li>
+        <li><span class="num" aria-hidden="true">4</span><span>
+          <b>Save or share it</b>
+          <span class="d">Every setting lives in the address bar. Bookmark the
+            page, or press <b>Copy view link</b> and whoever opens it sees exactly
+            your view. <b>Download CSV</b> exports what is on screen.</span>
+        </span></li>
+      </ol>
+
+      <div class="tips">
+        <h3>Good to know</h3>
+        <ul>
+          <li><b>Looking for COVID?</b> It is listed under the virus name,
+              <code>SARS-CoV-2</code> &mdash; searching &ldquo;covid&rdquo; finds it.</li>
+          <li><b>Comparing different cities?</b> Set <b>Measurement</b> to
+              <b>Normalized to PMMoV</b>. Raw concentrations depend on how diluted
+              each sewer system is, so they are not directly comparable between
+              places.</li>
+          <li><b>Lines squashed flat?</b> Switch <b>Scale</b> to <b>Log</b>.
+              Pathogens can differ by thousands of times, so one large series
+              flattens the rest.</li>
+          <li><b>A gap in a line</b> means no sample around that date &mdash;
+              not a zero.</li>
+        </ul>
+      </div>
+
+      <p class="onboard-note">
+        Wastewater measurements reflect community-level trends and should not be
+        interpreted as an individual&rsquo;s risk of infection.
+      </p>
+    </div>
+    <div class="onboard-foot">
+      <button type="button" class="btn" id="onboard-example">Show me an example</button>
+      <button type="button" class="btn btn-primary" id="onboard-close">Start exploring</button>
+    </div>
+  </dialog>
+
   <footer class="site">
     <p class="disclaimer">
       Wastewater measurements reflect community-level trends and should not be
@@ -420,6 +573,11 @@ footer.site .disclaimer {
     <p>
       Source: <a id="footer-source" href="https://data.wastewaterscan.org/" rel="noopener">WastewaterSCAN</a>.
       <span id="footer-updated"></span>
+    </p>
+    <p>
+      New here?
+      <button type="button" class="btn" id="help-button-footer"
+              style="font-size:.82rem;padding:5px 10px">How to use this dashboard</button>
     </p>
     <p>
       This is an independent, open-source visualization of published WastewaterSCAN
@@ -445,6 +603,14 @@ footer.site .disclaimer {
   var TREND_FOLD = 1.5;            // >=1.5x up is rising, <=1/1.5 down is falling
   var ROLLING_WINDOW_DAYS = 7;
   var STORAGE_KEY = "wastewater-trends:config";
+  var ONBOARD_KEY = "wastewater-trends:onboarded";
+  /* A pathogen with no sample this recently is shown as "not currently
+     reported" so nobody picks a discontinued marker and gets an empty chart. */
+  var STALE_AFTER_DAYS = 120;
+  /* Suggest the log scale once the visible series' peaks span this many
+     times. At 25x the smallest series occupies under 4% of the axis, which
+     reads as a flat line along the baseline. */
+  var WIDE_RANGE_FACTOR = 25;
   var THEME_KEY = "wastewater-trends:theme";
   var DAY_MS = 86400000;
 
@@ -583,6 +749,10 @@ footer.site .disclaimer {
   var chart = null;
   var config = Object.assign({}, DEFAULTS);
   var lastRendered = [];       // series actually drawn, for CSV export
+  /* Captured before anything runs: refresh() writes the current config into
+     the address bar, so by the time onboarding is wired up every visit would
+     otherwise look like it arrived from a shared link. */
+  var arrivedWithParams = window.location.search.length > 1;
 
   // ===================================================================
   // Config <-> URL <-> localStorage
@@ -699,12 +869,26 @@ footer.site .disclaimer {
       if (!bySite) return;
       Object.keys(bySite).forEach(function (pid) { relevant[pid] = true; });
     });
+    var groups = data.meta.pathogen_groups || [];
     return data.pathogens.filter(function (p) { return relevant[p.id]; })
       .sort(function (a, b) {
-        // Controls (PMMoV) sort last; everything else alphabetically.
-        if (!!a.control !== !!b.control) return a.control ? 1 : -1;
+        // WastewaterSCAN's own categories, in its own order.
+        var ga = groups.indexOf(a.category), gb = groups.indexOf(b.category);
+        if (ga !== gb) return (ga < 0 ? 99 : ga) - (gb < 0 ? 99 : gb);
+        // Within a category, things still being reported come first - a
+        // discontinued marker at the top just produces empty charts.
+        if (isStalePathogen(a) !== isStalePathogen(b)) return isStalePathogen(a) ? 1 : -1;
+        // Then the curated order, so the commonly-wanted ones lead.
+        var oa = a.order == null ? 999 : a.order, ob = b.order == null ? 999 : b.order;
+        if (oa !== ob) return oa - ob;
         return a.label.localeCompare(b.label);
       });
+  }
+
+  function isStalePathogen(pathogen) {
+    if (!pathogen.latest) return true;
+    var last = Date.parse(pathogen.latest + "T00:00:00Z");
+    return (latestMs - last) / DAY_MS > STALE_AFTER_DAYS;
   }
 
   function rangeBounds() {
@@ -863,6 +1047,7 @@ footer.site .disclaimer {
     });
 
     list.textContent = "";
+    var lastGroup = null;
     if (!items.length) {
       var empty = el("li");
       empty.appendChild(el("div", "picker-empty",
@@ -872,9 +1057,21 @@ footer.site .disclaimer {
 
     var atLimit = opts.multiple && opts.selected.length >= MAX_SERIES;
     items.forEach(function (item) {
+      // Group heading, when the renderer supplies one and it just changed.
+      if (opts.group) {
+        var groupName = opts.group(item);
+        if (groupName !== lastGroup) {
+          lastGroup = groupName;
+          var headingItem = el("li");
+          headingItem.setAttribute("role", "presentation");
+          headingItem.appendChild(el("div", "picker-group", groupName));
+          list.appendChild(headingItem);
+        }
+      }
+
       var checked = opts.selected.indexOf(item.id) !== -1;
       var li = el("li");
-      var label = el("label", "opt");
+      var label = el("label", "opt" + (opts.isStale && opts.isStale(item) ? " is-stale" : ""));
       var input = el("input");
       input.type = opts.multiple ? "checkbox" : "radio";
       input.name = opts.name;
@@ -883,7 +1080,11 @@ footer.site .disclaimer {
       input.disabled = atLimit && !checked;
       input.addEventListener("change", function () { opts.onToggle(item.id, input.checked); });
       var text = el("span", "opt-text");
-      text.appendChild(document.createTextNode(opts.primary(item)));
+      var primaryLine = el("span", null, opts.primary(item));
+      if (opts.isStale && opts.isStale(item)) {
+        primaryLine.appendChild(el("span", "badge-stale", "not reported now"));
+      }
+      text.appendChild(primaryLine);
       var secondary = opts.secondary(item);
       if (secondary) text.appendChild(el("small", null, secondary));
       label.appendChild(input);
@@ -943,7 +1144,11 @@ footer.site .disclaimer {
       emptyText: "No sites with data in this state.",
       searchText: function (s) { return [s.name, s.plant, s.city, s.state].filter(Boolean).join(" "); },
       primary: function (s) { return s.name; },
-      secondary: function (s) { return [s.city, s.state].filter(Boolean).join(", "); },
+      secondary: function (s) {
+        var place = [s.city, s.state].filter(Boolean).join(", ");
+        if (s.pop) place += " · serves ~" + compactFormatter.format(s.pop);
+        return place;
+      },
       onToggle: function (id, checked) {
         if (maxSites > 1) {
           config.sites = checked
@@ -964,9 +1169,18 @@ footer.site .disclaimer {
       list: $("pathogen-list"), foot: $("pathogen-foot"), search: $("pathogen-search"),
       name: "pathogen", multiple: maxPathogens > 1, selected: config.pathogens, items: pathogenOptions,
       emptyText: "No pathogens measured at this selection.",
-      searchText: function (p) { return p.label + " " + p.id; },
+      group: function (p) { return p.category || "Other"; },
+      isStale: isStalePathogen,
+      // Searching matches the publisher's label, the plain-English name, every
+      // alias, and the raw id - so "covid", "SARS-CoV-2" and "SC2_N" all work.
+      searchText: function (p) {
+        return [p.label, p.common, p.id].concat(p.aliases || []).filter(Boolean).join(" ");
+      },
       primary: function (p) { return p.label; },
-      secondary: function (p) { return p.control ? "Normalization control" : p.id; },
+      secondary: function (p) {
+        if (p.common && p.common !== p.label) return p.common;
+        return p.control ? "Normalization control" : p.id;
+      },
       onToggle: function (id, checked) {
         if (maxPathogens > 1) {
           config.pathogens = checked
@@ -1018,6 +1232,10 @@ footer.site .disclaimer {
       heading.appendChild(swatch);
       heading.appendChild(document.createTextNode(item.label));
       card.appendChild(heading);
+      if (config.mode === "site" && item.pathogen.common &&
+          item.pathogen.common !== item.pathogen.label) {
+        card.appendChild(el("div", "meta", item.pathogen.common));
+      }
 
       var latest = item.points.length ? item.points[item.points.length - 1] : null;
       var measurement = data.meta.measurements[config.measure];
@@ -1280,6 +1498,99 @@ footer.site .disclaimer {
   }
 
   // ===================================================================
+  // Contextual suggestions
+  // ===================================================================
+  /* One nudge at a time, only when it would actually help. Concentrations
+     between pathogens differ by orders of magnitude, so a linear axis with a
+     large series on it flattens everything else into the baseline - which
+     looks like "no data" to someone who does not know to switch scales. */
+  function renderSuggestion(series) {
+    var bar = $("suggest");
+    bar.textContent = "";
+    bar.hidden = true;
+
+    var drawable = series.filter(function (item) { return item.display.length; });
+    if (drawable.length < 2 || config.scale === "log") return;
+
+    var peaks = drawable.map(function (item) {
+      return item.display.reduce(function (max, point) {
+        return point.value > max ? point.value : max;
+      }, 0);
+    }).filter(function (value) { return value > 0; });
+    if (peaks.length < 2) return;
+
+    var biggest = Math.max.apply(null, peaks);
+    var smallest = Math.min.apply(null, peaks);
+    if (biggest / smallest < WIDE_RANGE_FACTOR) return;
+
+    bar.appendChild(document.createTextNode(
+      "These series differ by more than " +
+      formatValue(Math.round(biggest / smallest)) +
+      "×, so the smaller ones look flat on a linear scale."));
+    var action = el("button", null, "Switch to log scale");
+    action.type = "button";
+    action.addEventListener("click", function () { config.scale = "log"; refresh(); });
+    bar.appendChild(action);
+    bar.hidden = false;
+  }
+
+  // ===================================================================
+  // Onboarding
+  // ===================================================================
+  function openOnboarding() {
+    var dialog = $("onboard");
+    if (typeof dialog.showModal === "function") {
+      if (!dialog.open) dialog.showModal();
+    } else {
+      dialog.setAttribute("open", "");   // very old browsers: inline fallback
+    }
+  }
+
+  function closeOnboarding() {
+    var dialog = $("onboard");
+    storageSet(ONBOARD_KEY, "1");
+    if (typeof dialog.close === "function" && dialog.open) dialog.close();
+    else dialog.removeAttribute("open");
+  }
+
+  /* A worked example beats a description: a real site with several pathogens,
+     on the log scale where they are all legible at once. */
+  function loadExample() {
+    var withCovid = data.sites.filter(function (site) {
+      var bySite = data.series[site.id];
+      return bySite && bySite.SC2_N && bySite.SC2_N.d.length > 20;
+    });
+    var site = withCovid.length ? withCovid[0] : data.sites[0];
+    var wanted = ["SC2_N", "Influenza_A", "RSV", "Noro_G2"].filter(function (id) {
+      return data.series[site.id] && data.series[site.id][id];
+    });
+    config = Object.assign({}, DEFAULTS, {
+      mode: "site", state: site.state, sites: [site.id],
+      pathogens: wanted.length ? wanted : config.pathogens,
+      measure: "raw", range: "90d", avg: false, scale: "log"
+    });
+    closeOnboarding();
+    refresh();
+    $("chart-panel").scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function bindOnboarding() {
+    $("help-button").addEventListener("click", openOnboarding);
+    $("help-button-footer").addEventListener("click", openOnboarding);
+    $("onboard-close").addEventListener("click", closeOnboarding);
+    $("onboard-example").addEventListener("click", loadExample);
+    // Backdrop click and Esc both count as dismissing it.
+    $("onboard").addEventListener("click", function (event) {
+      if (event.target === $("onboard")) closeOnboarding();
+    });
+    $("onboard").addEventListener("close", function () { storageSet(ONBOARD_KEY, "1"); });
+
+    // First visit only. A shared link is someone else's view, so it opens
+    // straight into the data rather than a tour.
+    if (!storageGet(ONBOARD_KEY) && !arrivedWithParams) openOnboarding();
+  }
+
+  // ===================================================================
   // Orchestration
   // ===================================================================
   function refresh() {
@@ -1290,6 +1601,7 @@ footer.site .disclaimer {
     lastRendered = built.series.filter(function (item) { return item.points.length > 0; });
     renderHeadings(built.series, built.bounds);
     renderCards(built.series);
+    renderSuggestion(built.series);
     renderChart(built.series, built.bounds);
   }
 
@@ -1435,6 +1747,7 @@ footer.site .disclaimer {
         bindStaticHandlers();
         refresh();
         renderMetaDrawer();
+        bindOnboarding();
       })
       .catch(function (error) {
         var detail = String(error && error.message || error);

@@ -175,6 +175,34 @@ API's own `suggested_label`, so a newly added target renders with the
 publisher's wording instead of breaking. No public-health terminology is
 invented here.
 
+Pathogens are also grouped into **Respiratory / Gastrointestinal / Other**,
+again using WastewaterSCAN's own categories (`ASSAY_CATEGORIES`), with PMMoV
+in its own "Control" group.
+
+### Common names (added by this project)
+
+The source labels a series by its virus, not its disease — so somebody looking
+for "COVID" finds nothing, and "blaNDM" or "TB_RD9" mean little to a general
+reader. `COMMON_NAMES` in `scripts/build_data.py` adds, **for each pathogen**:
+
+- a plain-English name shown as a second line under the label
+  (`SARS-CoV-2` → "COVID-19", `TB_RD9` → "Tuberculosis"), and
+- extra search keys, so "covid", "bird flu", "stomach bug", "monkeypox",
+  "superbug" and "candida" all find the right series.
+
+The publisher's label always stays the primary name on screen; these are
+additive. They are ordinary common names for the organism — not public-health
+categories, severity levels, or thresholds, none of which this project defines.
+
+`PATHOGEN_ORDER` likewise sets the order *within* each category so that the
+commonly-wanted series lead the list instead of landing wherever the alphabet
+puts them. It orders a dropdown; it ranks nothing epidemiologically.
+
+Each pathogen also carries its `latest` sample date. The dashboard marks
+anything with no sample in 120 days as **"not reported now"** and sorts it to
+the bottom of its group, so nobody picks a discontinued marker — several
+SARS-CoV-2 variant assays ended in 2022–23 — and gets an empty chart.
+
 PMMoV is included as a series but flagged `control: true` — it is the
 normalization control, not a pathogen — and sorts last in the picker.
 
@@ -281,6 +309,27 @@ Anything unrecognised — a site that left the programme, a hand-edited range, a
 typo — is dropped and replaced with a working default rather than erroring.
 
 ---
+
+## Finding your way around
+
+The dashboard is built to be usable without reading this file:
+
+- **First visit opens a short guide** — what the site is, four steps, and the
+  handful of things that are genuinely non-obvious (where COVID is, when to
+  normalize, when to switch to a log scale, what a gap in a line means). It is
+  dismissed permanently to `localStorage` and reopens from **How to use this**
+  in the header or the link in the footer. Opening a *shared link* skips it:
+  that visitor came for someone's specific view, not a tour.
+- **"Show me an example"** loads a real working view — one site, four common
+  pathogens, log scale — because a worked example explains the controls faster
+  than prose does.
+- **Pathogens are grouped and searchable** by label, common name, alias, or id.
+- **Discontinued series are labelled and demoted** rather than silently
+  producing empty charts.
+- **A contextual hint offers the log scale** when the visible series' peaks
+  span more than 25×, since at that point the smaller ones are a flat line on
+  the baseline and look like missing data. It appears only on the linear scale,
+  only with two or more series, and switches scale in one click.
 
 ## Trend methodology
 
