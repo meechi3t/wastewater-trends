@@ -569,6 +569,15 @@ footer.site .disclaimer {
   border-left: 3px solid var(--series-4);
   border-radius: 8px; padding: 11px 14px; color: var(--text-secondary);
 }
+/* Sits between the masthead and the content in both views. Deliberately
+   quiet - it qualifies the page, it is not the headline. */
+.disclaimer.top {
+  margin: 0 0 18px; padding: 10px 14px;
+  background: var(--surface-1); border: 1px solid var(--border);
+  border-left: 3px solid var(--series-4); border-radius: 8px;
+  color: var(--text-secondary); font-size: .875rem; line-height: 1.5;
+  max-width: 78ch;
+}
 @media (max-width: 560px) {
   .wrap { padding-block: 14px 36px; }
   .controls { padding: 13px; }
@@ -595,6 +604,13 @@ footer.site .disclaimer {
       <button type="button" class="theme-toggle" id="theme-toggle" aria-live="polite">Theme: System</button>
     </div>
   </header>
+
+  <!-- Stated up front rather than in the footer: it changes how everything
+       below should be read, so it should not depend on scrolling to the end. -->
+  <p class="disclaimer top" id="top-disclaimer">
+    Wastewater measurements reflect community-level trends and should not be
+    interpreted as an individual&rsquo;s risk of infection.
+  </p>
 
   <!-- ============================ SIMPLE VIEW ============================ -->
   <div id="simple-view" class="simple">
@@ -856,13 +872,6 @@ footer.site .disclaimer {
   </dialog>
 
   <footer class="site">
-    <!-- The caveat leads: it is the one line here that changes how somebody
-         should read the page. -->
-    <p class="disclaimer">
-      Wastewater measurements reflect community-level trends and should not be
-      interpreted as an individual's risk of infection.
-    </p>
-
     <p class="credit">
       <img src="tip10-logo.png" width="30" height="30" alt="Tip10 Technologies"
            loading="lazy" decoding="async">
