@@ -183,11 +183,22 @@ img { max-width: 100%; }
   border: 1px solid var(--border);
 }
 .navbtn:hover { border-color: var(--border-strong); color: var(--text-primary); }
+/* Icon-only, so it needs a real label for anyone not seeing the glyph. Fixed
+   square: it must not stretch with the other nav items when they go
+   full-width on a phone. */
+.iconbtn {
+  width: 40px; height: 40px; flex: 0 0 40px; padding: 0;
+  display: grid; place-items: center; cursor: pointer;
+  background: var(--surface-1); color: var(--text-secondary);
+  border: 1px solid var(--border); border-radius: 999px;
+}
+.iconbtn:hover { border-color: var(--border-strong); color: var(--text-primary); }
 @media (max-width: 560px) {
   .mainnav { width: 100%; }
   .navswitch { flex: 1 1 100%; }
   .navswitch button { flex: 1 1 0; }
   .navbtn { flex: 1 1 0; }
+  .iconbtn { flex: 0 0 40px; }
 }
 .theme-toggle:hover { border-color: var(--border-strong); color: var(--text-primary); }
 
@@ -654,7 +665,11 @@ footer.site .disclaimer {
            the current page or a link to another one. -->
       <div class="navswitch" id="nav-views"></div>
       <button type="button" class="navbtn" id="help-button">Help</button>
-      <button type="button" class="navbtn" id="theme-toggle" aria-live="polite">Theme: System</button>
+      <button type="button" class="iconbtn" id="theme-toggle" aria-label="Switch to dark theme">
+        <svg id="theme-icon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"
+             fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round"></svg>
+      </button>
     </nav>
   </header>
 
@@ -2610,25 +2625,58 @@ footer.site .disclaimer {
   }
 
   // --- theme -------------------------------------------------------
+  /* The page follows the device by default and says nothing about it. The
+     button is an override, not a three-way setting: most people never touch
+     it, and "Theme: System" spent a nav slot explaining a default. */
+  var systemDark = window.matchMedia("(prefers-color-scheme: dark)");
+
+  var SUN_PATH =
+    '<circle cx="12" cy="12" r="4.2"></circle>' +
+    '<path d="M12 2.6v2.2M12 19.2v2.2M4.0 4.0l1.6 1.6M18.4 18.4l1.6 1.6' +
+    'M2.6 12h2.2M19.2 12h2.2M4.0 20.0l1.6-1.6M18.4 5.6l1.6-1.6"></path>';
+  var MOON_PATH = '<path d="M20.5 14.3A8.6 8.6 0 1 1 9.7 3.5a6.9 6.9 0 0 0 10.8 10.8z"></path>';
+
+  function effectiveTheme() {
+    var override = document.documentElement.getAttribute("data-theme");
+    return override || (systemDark.matches ? "dark" : "light");
+  }
+
+  function paintThemeButton() {
+    var dark = effectiveTheme() === "dark";
+    // The glyph shows where the tap goes, not where you are.
+    $("theme-icon").innerHTML = dark ? SUN_PATH : MOON_PATH;
+    $("theme-toggle").setAttribute("aria-label",
+      dark ? "Switch to light theme" : "Switch to dark theme");
+  }
+
   function applyTheme(theme) {
     if (theme === "light" || theme === "dark") {
       document.documentElement.setAttribute("data-theme", theme);
+      storageSet(THEME_KEY, theme);
     } else {
       document.documentElement.removeAttribute("data-theme");
     }
-    $("theme-toggle").textContent = "Theme: " + (theme === "light" ? "Light" : theme === "dark" ? "Dark" : "System");
-    storageSet(THEME_KEY, theme);
+    paintThemeButton();
   }
 
   function initTheme() {
-    var saved = storageGet(THEME_KEY) || "system";
-    applyTheme(saved);
+    var saved = storageGet(THEME_KEY);
+    applyTheme(saved === "light" || saved === "dark" ? saved : "system");
+
     $("theme-toggle").addEventListener("click", function () {
-      var order = ["system", "light", "dark"];
-      var current = storageGet(THEME_KEY) || "system";
-      applyTheme(order[(order.indexOf(current) + 1) % order.length]);
+      applyTheme(effectiveTheme() === "dark" ? "light" : "dark");
       if (data) refresh();   // re-read the CSS colour tokens
     });
+
+    // While no override is set, follow the device if it changes mid-session.
+    var onSystemChange = function () {
+      if (!document.documentElement.getAttribute("data-theme")) {
+        paintThemeButton();
+        if (data) refresh();
+      }
+    };
+    if (systemDark.addEventListener) systemDark.addEventListener("change", onSystemChange);
+    else if (systemDark.addListener) systemDark.addListener(onSystemChange);  // older Safari
   }
 
   function fail(title, detail) {
