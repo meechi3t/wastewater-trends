@@ -321,7 +321,12 @@ details.meta-drawer .drawer-body { padding: 0 16px 16px; font-size: .87rem; colo
 .simple h2.section { font-size: 1.5rem; margin-bottom: 4px; }
 .simple p.section-sub { margin: 0 0 18px; color: var(--text-secondary); font-size: 1rem; }
 
-.levels { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); }
+/* align-items: start so expanding one card does not stretch its neighbours
+   to match the new row height, leaving them mostly empty. */
+.levels {
+  display: grid; gap: 14px; align-items: start;
+  grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+}
 .level-card {
   background: var(--surface-1); border: 1px solid var(--border);
   border-radius: 14px; padding: 20px; box-shadow: var(--shadow);
@@ -355,8 +360,8 @@ details.meta-drawer .drawer-body { padding: 0 16px 16px; font-size: .87rem; colo
   list-style: none; padding: 6px 2px; min-height: 32px;
 }
 .card-more summary::-webkit-details-marker { display: none; }
-.card-more summary::before { content: "\25B8  "; display: inline-block; transition: transform .15s; }
-.card-more[open] summary::before { content: "\25BE  "; }
+.card-more summary::before { content: "\25B8"; display: inline-block; margin-right: 8px; }
+.card-more[open] summary::before { content: "\25BE"; }
 .card-more summary:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; border-radius: 6px; }
 .card-more .more-body { padding: 6px 2px 2px; font-size: .93rem; color: var(--text-secondary); }
 .card-more h4 {
@@ -1994,10 +1999,17 @@ footer.site .disclaimer {
       // little, so it is always labelled and explained under "Show more".
       if (reading.value != null) {
         var value = el("p", "level-value");
-        var amount = el("b", null, formatPlain(reading.value));
-        value.appendChild(amount);
-        value.appendChild(document.createTextNode(" "));
-        value.appendChild(el("span", null, "copies per gram"));
+        if (reading.value === 0) {
+          // "0 copies per gram" is literally true but reads as a measurement
+          // failure. The source's own word for it is clearer.
+          value.appendChild(el("b", null, "None detected"));
+          value.appendChild(document.createTextNode(" "));
+          value.appendChild(el("span", null, "in the latest test"));
+        } else {
+          value.appendChild(el("b", null, formatPlain(reading.value)));
+          value.appendChild(document.createTextNode(" "));
+          value.appendChild(el("span", null, "copies per gram"));
+        }
         card.appendChild(value);
       }
 
