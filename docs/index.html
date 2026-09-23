@@ -540,9 +540,19 @@ footer.site {
 footer.site p { margin: 0 0 9px; max-width: 78ch; }
 footer.site .credit {
   display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center;
-  margin: 0 0 14px; padding-bottom: 14px; border-bottom: 1px solid var(--border);
-  font-size: .9rem;
+  margin: 14px 0 0; font-size: .9rem;
 }
+footer.site .footer-more { margin-top: 14px; border-top: 1px solid var(--border); padding-top: 4px; }
+footer.site .footer-more summary {
+  cursor: pointer; list-style: none; padding: 10px 2px; min-height: 40px;
+  font-size: .86rem; color: var(--text-secondary);
+}
+footer.site .footer-more summary::-webkit-details-marker { display: none; }
+footer.site .footer-more summary::before { content: "\25B8"; display: inline-block; margin-right: 8px; }
+footer.site .footer-more[open] summary::before { content: "\25BE"; }
+footer.site .footer-more summary:hover { color: var(--text-primary); }
+footer.site .footer-more summary:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; border-radius: 6px; }
+footer.site .footer-more-body { padding: 2px 2px 8px; }
 /* The mark is silver on navy, with an opaque field - so it is presented as a
    small rounded badge rather than floated on the page surface. That keeps the
    real brand colours in both themes; the hairline ring just stops the navy
@@ -846,26 +856,38 @@ footer.site .disclaimer {
   </dialog>
 
   <footer class="site">
+    <!-- The caveat leads: it is the one line here that changes how somebody
+         should read the page. -->
+    <p class="disclaimer">
+      Wastewater measurements reflect community-level trends and should not be
+      interpreted as an individual's risk of infection.
+    </p>
+
     <p class="credit">
       <img src="tip10-logo.png" width="30" height="30" alt="Tip10 Technologies"
            loading="lazy" decoding="async">
       <b>Visualized by Tip10 Technologies</b>
       <span>&middot; Wastewater data collected and published by WastewaterSCAN</span>
     </p>
-    <p class="disclaimer">
-      Wastewater measurements reflect community-level trends and should not be
-      interpreted as an individual's risk of infection.
-    </p>
-    <p id="footer-attrib"></p>
-    <p>
-      Source: <a id="footer-source" href="https://data.wastewaterscan.org/" rel="noopener">WastewaterSCAN</a>.
-      <span id="footer-updated"></span>
-    </p>
-    <p>
-      This is an independent, open-source visualization of published WastewaterSCAN
-      data. It is not affiliated with or endorsed by WastewaterSCAN, Stanford
-      University, Emory University, or Verily.
-    </p>
+
+    <!-- The legal and provenance prose is collapsed. It stays complete and one
+         tap away; WastewaterSCAN is still credited in the visible line above,
+         so attribution is not hidden. -->
+    <details class="footer-more">
+      <summary>Data source, attribution and independence</summary>
+      <div class="footer-more-body">
+        <p id="footer-attrib"></p>
+        <p>
+          Source: <a id="footer-source" href="https://data.wastewaterscan.org/" rel="noopener">WastewaterSCAN</a>.
+          <span id="footer-updated"></span>
+        </p>
+        <p>
+          This is an independent, open-source visualization of published WastewaterSCAN
+          data. It is not affiliated with or endorsed by WastewaterSCAN, Stanford
+          University, Emory University, or Verily.
+        </p>
+      </div>
+    </details>
   </footer>
 </div>
 
