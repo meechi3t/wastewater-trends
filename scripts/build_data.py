@@ -223,6 +223,20 @@ MAX_OUTPUT_BYTES = 25 * 1024 * 1024
 # "everything upstream has".
 RETENTION_LADDER = [None, 730, 365, 180]
 
+# Results reach the feed a couple of days after collection, and they arrive in
+# waves - a date can triple its site count over the following three days. So
+# the newest sample date is a poor freshness signal: it represents a handful of
+# plants, not the programme. `complete_through` is the most recent date by
+# which most plants had reported, which is the date a reader should actually
+# judge currency by.
+#
+# Plants test every two to three days on staggered schedules, so no single day
+# ever has every plant. Coverage is therefore measured over a rolling 3-day
+# window of distinct reporting sites, against the sites active recently.
+COMPLETENESS_WINDOW_DAYS = 3
+COMPLETENESS_THRESHOLD = 0.85
+ACTIVE_SITE_WINDOW_DAYS = 30
+
 SCHEMA_VERSION = 1
 
 
@@ -725,6 +739,7 @@ def build_compact_json(observations: pd.DataFrame, sites: pd.DataFrame,
             "epoch": epoch.date().isoformat(),
             "first_sample_date": epoch.date().isoformat(),
             "latest_sample_date": latest.date().isoformat(),
+            "complete_through": _complete_through(observations, latest),
             "measurements": MEASUREMENTS,
             "categories": CATEGORIES,
             "pathogen_groups": CATEGORY_ORDER,
@@ -738,6 +753,31 @@ def build_compact_json(observations: pd.DataFrame, sites: pd.DataFrame,
         "pathogens": pathogen_records,
         "series": series,
     }
+
+
+def _complete_through(observations: pd.DataFrame, latest: pd.Timestamp) -> str | None:
+    """The most recent date by which most reporting plants had reported."""
+    by_day = observations.groupby("date")["site_id"].apply(set)
+    if by_day.empty:
+        return None
+
+    recent_cutoff = latest - pd.Timedelta(days=ACTIVE_SITE_WINDOW_DAYS)
+    active: set = set()
+    for day, sites in by_day.items():
+        if day >= recent_cutoff:
+            active |= sites
+    if not active:
+        return None
+
+    lookup = by_day.to_dict()
+    for back in range(0, 60):
+        day = latest - pd.Timedelta(days=back)
+        window: set = set()
+        for offset in range(COMPLETENESS_WINDOW_DAYS):
+            window |= lookup.get(day - pd.Timedelta(days=offset), set())
+        if len(window) / len(active) >= COMPLETENESS_THRESHOLD:
+            return day.date().isoformat()
+    return None
 
 
 def _clean(value):

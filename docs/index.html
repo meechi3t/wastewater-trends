@@ -739,6 +739,11 @@ footer.site .disclaimer {
           <p><b>Rising, falling or steady</b> compares the last three weeks of
              samples: the average of the most recent half against the half
              before it.</p>
+          <p><b>Why the date is a few days back.</b> Each plant is tested every
+             two to three days, and a result takes about two days to arrive.
+             They also arrive in batches, so the newest dates keep filling in
+             for a while. &ldquo;Most recent complete data&rdquo; is the last
+             date by which most plants had reported.</p>
           <p><b>This is not a measure of your personal risk.</b> It describes
              the whole community served by one treatment plant.</p>
         </div>
@@ -2159,9 +2164,20 @@ footer.site .disclaimer {
         "This plant has not reported any of these illnesses yet. Try another location."));
     }
 
-    $("simple-asof").textContent = newest
-      ? "Based on wastewater tested up to " + formatDate(newest) + "."
-      : "";
+    /* The newest sample date represents only the handful of plants whose
+       results happen to have landed. complete_through is the date most plants
+       had reported by, which is what "how current is this" should mean. */
+    var completeThrough = data.meta.complete_through;
+    if (completeThrough) {
+      var completeMs = Date.parse(completeThrough + "T00:00:00Z");
+      $("simple-asof").textContent =
+        "Most recent complete data: " + formatDate(completeMs) +
+        ". Tests from the last few days are still coming in.";
+    } else {
+      $("simple-asof").textContent = newest
+        ? "Based on wastewater tested up to " + formatDate(newest) + "."
+        : "";
+    }
   }
 
   function titleCase(text) { return text.charAt(0).toUpperCase() + text.slice(1); }
@@ -2597,8 +2613,12 @@ footer.site .disclaimer {
     var ageDays = Math.round((Date.now() - Date.parse(latest + "T00:00:00Z")) / DAY_MS);
     var status = $("status");
     status.classList.toggle("is-stale", ageDays > 14);
+    var complete = data.meta.complete_through;
     $("status-text").textContent =
-      "Data through " + formatDate(Date.parse(latest + "T00:00:00Z")) +
+      (complete
+        ? "Complete through " + formatDate(Date.parse(complete + "T00:00:00Z")) +
+          " · newest sample " + formatDate(Date.parse(latest + "T00:00:00Z"))
+        : "Data through " + formatDate(Date.parse(latest + "T00:00:00Z"))) +
       " · " + data.meta.counts.sites + " sites · " + data.meta.counts.pathogens + " pathogens · " +
       data.meta.counts.observations.toLocaleString("en-US") + " measurements" +
       (ageDays > 14 ? " · newest sample is " + ageDays + " days old" : "");
@@ -2612,7 +2632,8 @@ footer.site .disclaimer {
       ["Source", source.dashboard_url],
       ["Licence", source.license],
       ["Update frequency", source.update_frequency],
-      ["Newest sample", data.meta.latest_sample_date],
+      ["Most recent complete data", data.meta.complete_through],
+      ["Newest sample received", data.meta.latest_sample_date],
       ["History retained", data.meta.retention_note],
       ["Measurement", data.meta.measurements[config.measure].description]
     ];

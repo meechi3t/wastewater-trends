@@ -384,6 +384,37 @@ The detailed view is built to be usable without reading this file:
   the baseline and look like missing data. It appears only on the linear scale,
   only with two or more series, and switches scale in one click.
 
+## How current the data is
+
+Two different clocks, and the useful one is not the obvious one.
+
+**Each plant is tested every 2–3 days**, not daily: across the 148 active
+sites the median gap between tests is 2 days, and 89% of gaps are 1–3 days.
+Schedules are staggered, so no single day ever carries every plant.
+
+**Results reach the feed about 2 days after collection, in waves.** Watching
+one date across three consecutive daily builds, 2026-09-18 went from 6 to 20
+to 66 reporting plants. So the newest sample date represents a handful of
+plants whose results happened to land, not the programme.
+
+`build_data.py` therefore also publishes **`meta.complete_through`**: the most
+recent date by which most plants had reported. Because schedules are
+staggered, coverage is measured over a rolling 3-day window of distinct
+reporting sites against the sites active in the last 30 days, and the date is
+the newest one clearing 85%. On the build above that gave 2026-09-18, three
+days behind the newest sample — the coverage figures step 24% → 48% → 67% →
+**90%** → 97% as you walk back, so the answer is not sensitive to the exact
+threshold.
+
+The dashboard leads with that date ("Most recent complete data: …") rather
+than the newest sample, and says that recent days are still filling in. The
+per-card "Last tested" date stays site-specific, because for one plant that
+date is exact.
+
+Practical consequence: **checking more than once a day is pointless**, and
+since a level is built from several weeks of measurements, weekly is about
+right for noticing a real change.
+
 ## What the published levels are, and are not
 
 Each simple-view card leads with WastewaterSCAN's own `activity_category`
