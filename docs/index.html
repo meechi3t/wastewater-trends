@@ -161,7 +161,34 @@ img { max-width: 100%; }
   border: 1px solid var(--border); border-radius: 999px;
   padding: 7px 14px; font: inherit; font-size: .85rem; cursor: pointer;
 }
-.head-actions { display: flex; gap: 8px; flex-wrap: wrap; flex: none; }
+.mainnav { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; flex: none; }
+.navswitch {
+  display: flex; gap: 3px; padding: 3px;
+  background: var(--surface-2); border: 1px solid var(--border); border-radius: 999px;
+}
+.navswitch button {
+  font: inherit; font-size: .88rem; cursor: pointer; white-space: nowrap;
+  padding: 8px 16px; min-height: 40px; border-radius: 999px;
+  background: none; border: 1px solid transparent; color: var(--text-secondary);
+}
+.navswitch button:hover { color: var(--text-primary); }
+.navswitch button[aria-current="page"] {
+  background: var(--surface-1); border-color: var(--border-strong);
+  color: var(--text-primary); font-weight: 600; box-shadow: var(--shadow);
+}
+.navbtn {
+  font: inherit; font-size: .88rem; cursor: pointer; white-space: nowrap;
+  padding: 8px 16px; min-height: 40px; border-radius: 999px;
+  background: var(--surface-1); color: var(--text-secondary);
+  border: 1px solid var(--border);
+}
+.navbtn:hover { border-color: var(--border-strong); color: var(--text-primary); }
+@media (max-width: 560px) {
+  .mainnav { width: 100%; }
+  .navswitch { flex: 1 1 100%; }
+  .navswitch button { flex: 1 1 0; }
+  .navbtn { flex: 1 1 0; }
+}
 .theme-toggle:hover { border-color: var(--border-strong); color: var(--text-primary); }
 
 /* --------------------------------------------------------- status strip */
@@ -621,11 +648,14 @@ footer.site .disclaimer {
       <p id="masthead-sub">See which illnesses are showing up in your
          community&rsquo;s wastewater right now.</p>
     </div>
-    <div class="head-actions">
-      <button type="button" class="theme-toggle" id="view-toggle">Detailed view</button>
-      <button type="button" class="theme-toggle" id="help-button">How to use this</button>
-      <button type="button" class="theme-toggle" id="theme-toggle" aria-live="polite">Theme: System</button>
-    </div>
+    <nav class="mainnav" aria-label="Main">
+      <!-- Named for where each one goes, not for where you are. A single
+           button reading "Detailed view" is ambiguous: it could be a label for
+           the current page or a link to another one. -->
+      <div class="navswitch" id="nav-views"></div>
+      <button type="button" class="navbtn" id="help-button">Help</button>
+      <button type="button" class="navbtn" id="theme-toggle" aria-live="polite">Theme: System</button>
+    </nav>
   </header>
 
   <!-- Stated up front rather than in the footer: it changes how everything
@@ -1132,6 +1162,7 @@ footer.site .disclaimer {
      the address bar, so by the time onboarding is wired up every visit would
      otherwise look like it arrived from a shared link. */
   var arrivedWithParams = window.location.search.length > 1;
+  var pendingHistoryPush = false;   // set by the navigation steps below
   var siteLastSampleMs = {};   // site id -> newest sample across all pathogens
 
   // ===================================================================
@@ -1225,7 +1256,16 @@ footer.site .disclaimer {
     params.set("range", config.range);
     params.set("avg", config.avg ? "1" : "0");
     params.set("scale", config.scale);
-    history.replaceState(null, "", window.location.pathname + "?" + params.toString());
+    var url = window.location.pathname + "?" + params.toString();
+    /* Only the moves a person would think of as "a step" get a history entry,
+       so the phone's Back button undoes one of those rather than a stray
+       slider nudge. Everything else rewrites the current entry in place. */
+    if (pendingHistoryPush && url !== window.location.pathname + window.location.search) {
+      history.pushState(null, "", url);
+    } else {
+      history.replaceState(null, "", url);
+    }
+    pendingHistoryPush = false;
     storageSet(STORAGE_KEY, JSON.stringify(config));
   }
 
@@ -2312,6 +2352,7 @@ footer.site .disclaimer {
       input.addEventListener("change", function () {
         config.sites = [site.id];
         config.state = site.state || "";
+        pendingHistoryPush = true;   // Back should reopen the chooser
         refresh();
       });
       var text = el("span", "opt-text");
@@ -2353,9 +2394,26 @@ footer.site .disclaimer {
   }
 
   function setView(view) {
+    if (config.view === view) return;
     config.view = view;
+    pendingHistoryPush = true;      // Back should return to the other view
     refresh();
     window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function renderNav() {
+    var container = $("nav-views");
+    container.textContent = "";
+    [
+      { id: "simple", label: "Overview" },
+      { id: "detailed", label: "Charts" }
+    ].forEach(function (item) {
+      var button = el("button", null, item.label);
+      button.type = "button";
+      if (config.view === item.id) button.setAttribute("aria-current", "page");
+      button.addEventListener("click", function () { setView(item.id); });
+      container.appendChild(button);
+    });
   }
 
   // ===================================================================
@@ -2481,9 +2539,9 @@ footer.site .disclaimer {
     writeConfig();
 
     var simple = config.view === "simple";
+    renderNav();
     $("simple-view").hidden = !simple;
     $("detailed-view").hidden = simple;
-    $("view-toggle").textContent = simple ? "Detailed view" : "Simple view";
     $("masthead-sub").textContent = simple
       ? "See which illnesses are showing up in your community's wastewater right now."
       : "Explore and compare pathogen measurements across United States sewersheds, "
@@ -2608,13 +2666,11 @@ footer.site .disclaimer {
       }
     });
     $("download-csv").addEventListener("click", downloadCsv);
-    $("view-toggle").addEventListener("click", function () {
-      setView(config.view === "simple" ? "detailed" : "simple");
-    });
     $("to-detailed").addEventListener("click", function () { setView("detailed"); });
     $("change-place").addEventListener("click", function () {
       config.sites = [];
       $("chooser-search").value = "";
+      pendingHistoryPush = true;
       refresh();
       $("chooser-search").focus();
     });
@@ -2622,6 +2678,7 @@ footer.site .disclaimer {
     $("geo-button").addEventListener("click", useMyLocation);
     window.addEventListener("popstate", function () {
       config = readConfig();
+      pendingHistoryPush = false;   // going back must not create a new entry
       refresh();
     });
   }
