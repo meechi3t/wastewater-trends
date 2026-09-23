@@ -543,8 +543,14 @@ footer.site .credit {
   margin: 0 0 14px; padding-bottom: 14px; border-bottom: 1px solid var(--border);
   font-size: .9rem;
 }
+/* The mark is silver on navy, with an opaque field - so it is presented as a
+   small rounded badge rather than floated on the page surface. That keeps the
+   real brand colours in both themes; the hairline ring just stops the navy
+   from merging into the dark surface. */
 footer.site .credit img {
-  width: 30px; height: 30px; flex: none; display: block;
+  width: 32px; height: 32px; flex: none; display: block;
+  border-radius: 7px;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, .10);
 }
 footer.site .credit b { color: var(--text-primary); font-weight: 600; }
 footer.site .credit span { color: var(--text-muted); }
