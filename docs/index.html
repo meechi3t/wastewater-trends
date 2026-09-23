@@ -342,6 +342,40 @@ details.meta-drawer .drawer-body { padding: 0 16px 16px; font-size: .87rem; colo
 .level-move { font-size: 1.02rem; color: var(--text-secondary); display: flex; align-items: center; gap: 7px; }
 .level-move .arrow { font-size: 1.15rem; }
 .level-card .asof { margin: 12px 0 0; font-size: .87rem; color: var(--text-muted); }
+.level-value {
+  margin: 10px 0 0; font-size: 1.05rem; color: var(--text-primary);
+}
+.level-value b { font-weight: 600; font-variant-numeric: tabular-nums; }
+.level-value span { color: var(--text-muted); font-size: .9rem; }
+
+/* expandable detail */
+.card-more { margin-top: 14px; border-top: 1px solid var(--border); padding-top: 10px; }
+.card-more summary {
+  cursor: pointer; font-size: .95rem; font-weight: 600; color: var(--accent);
+  list-style: none; padding: 6px 2px; min-height: 32px;
+}
+.card-more summary::-webkit-details-marker { display: none; }
+.card-more summary::before { content: "\25B8  "; display: inline-block; transition: transform .15s; }
+.card-more[open] summary::before { content: "\25BE  "; }
+.card-more summary:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; border-radius: 6px; }
+.card-more .more-body { padding: 6px 2px 2px; font-size: .93rem; color: var(--text-secondary); }
+.card-more h4 {
+  margin: 14px 0 6px; font-size: .78rem; font-weight: 700; letter-spacing: .04em;
+  text-transform: uppercase; color: var(--text-muted);
+}
+.card-more h4:first-child { margin-top: 4px; }
+.spark { display: block; width: 100%; height: 54px; overflow: visible; }
+.readings { width: 100%; border-collapse: collapse; font-size: .9rem; }
+.readings th { text-align: left; font-weight: 600; color: var(--text-muted); font-size: .8rem; padding: 3px 0; }
+.readings td { padding: 4px 0; border-top: 1px solid var(--border); }
+.readings td.num { text-align: right; font-variant-numeric: tabular-nums; }
+.readings td.lvl { text-align: right; color: var(--text-muted); white-space: nowrap; padding-left: 10px; }
+.card-more p { margin: 0 0 8px; }
+.card-more .full-chart {
+  font: inherit; font-size: .92rem; font-weight: 600; cursor: pointer;
+  background: none; border: 0; padding: 8px 2px; color: var(--accent);
+  text-decoration: underline; min-height: 40px;
+}
 .level-card.is-unknown .level-word { font-size: 1.35rem; color: var(--text-secondary); }
 
 /* Colour for the source's own ordered levels. Deliberately NOT green-to-red:
@@ -879,6 +913,19 @@ footer.site .disclaimer {
     notation: "compact", maximumSignificantDigits: 3
   });
   var plainFormatter = new Intl.NumberFormat("en-US", { maximumSignificantDigits: 3 });
+  /* Grouped digits ("27,200") rather than compact ("27.2K"). On the simple
+     view the number is being read, not skimmed on an axis, and thousands
+     separators are easier for that. Still capped at three significant digits
+     because the assay supports nothing finer. */
+  var groupedFormatter = new Intl.NumberFormat("en-US", {
+    maximumSignificantDigits: 3, useGrouping: true
+  });
+  function formatPlain(value) {
+    if (value == null || !isFinite(value)) return "\u2014";
+    if (value === 0) return "0";
+    if (Math.abs(value) < 0.01) return compactFormatter.format(value);
+    return groupedFormatter.format(value);
+  }
 
   /* Concentrations span zero to ~1e10, so a single format does not serve both
      ends. Values are reported to at most three significant digits because the
@@ -1185,17 +1232,22 @@ footer.site .disclaimer {
       return list.reduce(function (a, b) { return a + b; }, 0) / list.length;
     };
     var earlyMean = mean(early), lateMean = mean(late);
+    var detail = {
+      earlyMean: earlyMean, lateMean: lateMean,
+      earlyCount: early.length, lateCount: late.length,
+      windowStart: windowStart, midpoint: midpoint, windowEnd: windowEnd
+    };
 
     // An entirely non-detected series is not "stable" in any useful sense -
     // there is no signal to be stable. Say so plainly instead.
     if (earlyMean === 0 && lateMean === 0) {
-      return { key: "none", reason: "nodetect", label: "No detections", arrow: "—" };
+      return { key: "none", reason: "nodetect", label: "No detections", arrow: "—", detail: detail };
     }
-    if (earlyMean === 0) return { key: "rising", label: "Rising", arrow: "↑" };
+    if (earlyMean === 0) return { key: "rising", label: "Rising", arrow: "↑", detail: detail };
     var ratio = lateMean / earlyMean;
-    if (ratio >= TREND_FOLD) return { key: "rising", label: "Rising", arrow: "↑" };
-    if (ratio <= 1 / TREND_FOLD) return { key: "falling", label: "Falling", arrow: "↓" };
-    return { key: "stable", label: "Stable", arrow: "→" };
+    if (ratio >= TREND_FOLD) return { key: "rising", label: "Rising", arrow: "↑", detail: detail };
+    if (ratio <= 1 / TREND_FOLD) return { key: "falling", label: "Falling", arrow: "↓", detail: detail };
+    return { key: "stable", label: "Stable", arrow: "→", detail: detail };
   }
 
   /* The list of series the current configuration asks for. */
@@ -1780,6 +1832,7 @@ footer.site .disclaimer {
 
     var lastIndex = entry.d.length - 1;
     var sampledMs = epochMs + entry.d[lastIndex] * DAY_MS;
+    var latestValue = entry.v ? entry.v[lastIndex] : null;
     var levelName = null;
     if (entry.c) {
       // Walk back to the most recent sample that actually carries a level.
@@ -1792,6 +1845,7 @@ footer.site .disclaimer {
     var points = pointsFor(siteId, pathogenId, bounds);
     return {
       pathogen: pathogenById[pathogenId],
+      value: latestValue,
       level: levelName,
       step: levelName && LEVEL_STEPS[levelName] != null ? LEVEL_STEPS[levelName] : null,
       sampled: sampledMs,
@@ -1901,7 +1955,19 @@ footer.site .disclaimer {
         card.appendChild(move);
       }
 
+      // The measured number itself, under the meter. On its own it means
+      // little, so it is always labelled and explained under "Show more".
+      if (reading.value != null) {
+        var value = el("p", "level-value");
+        var amount = el("b", null, formatPlain(reading.value));
+        value.appendChild(amount);
+        value.appendChild(document.createTextNode(" "));
+        value.appendChild(el("span", null, "copies per gram"));
+        card.appendChild(value);
+      }
+
       card.appendChild(el("p", "asof", "Last tested " + formatDate(reading.sampled)));
+      card.appendChild(buildCardDetail(site, pathogenId, reading, naming));
       container.appendChild(card);
     });
 
@@ -1916,6 +1982,136 @@ footer.site .disclaimer {
   }
 
   function titleCase(text) { return text.charAt(0).toUpperCase() + text.slice(1); }
+
+  var SVG_NS = "http://www.w3.org/2000/svg";
+  function svgEl(tag, attrs) {
+    var node = document.createElementNS(SVG_NS, tag);
+    Object.keys(attrs || {}).forEach(function (key) { node.setAttribute(key, attrs[key]); });
+    return node;
+  }
+
+  /* A small inline sparkline. Deliberately hand-drawn SVG rather than
+     Chart.js: the simple view should not pull in a charting library, and the
+     shape of the last few months is all this needs to convey. Scaled to the
+     series' own range, so it shows shape, not absolute height - the number
+     and the level carry the magnitude. */
+  function sparkline(points, label) {
+    var width = 260, height = 54, padY = 6;
+    var svg = svgEl("svg", {
+      "class": "spark", viewBox: "0 0 " + width + " " + height,
+      preserveAspectRatio: "none", role: "img", "aria-label": label
+    });
+    if (points.length < 2) return svg;
+
+    var firstT = points[0].t, lastT = points[points.length - 1].t;
+    var span = Math.max(lastT - firstT, 1);
+    var values = points.map(function (point) { return point.value; });
+    var max = Math.max.apply(null, values);
+    var min = Math.min.apply(null, values);
+    var range = max - min || max || 1;
+
+    var coords = points.map(function (point) {
+      return [
+        ((point.t - firstT) / span) * width,
+        height - padY - ((point.value - min) / range) * (height - padY * 2)
+      ];
+    });
+
+    svg.appendChild(svgEl("polyline", {
+      points: coords.map(function (c) { return c[0].toFixed(1) + "," + c[1].toFixed(1); }).join(" "),
+      fill: "none", stroke: "currentColor", "stroke-width": 2,
+      "stroke-linejoin": "round", "stroke-linecap": "round", "vector-effect": "non-scaling-stroke"
+    }));
+    var last = coords[coords.length - 1];
+    svg.appendChild(svgEl("circle", {
+      cx: last[0].toFixed(1), cy: last[1].toFixed(1), r: 3.5,
+      fill: "currentColor", "vector-effect": "non-scaling-stroke"
+    }));
+    return svg;
+  }
+
+  /* The expandable half of a card: recent readings, the numbers behind the
+     trend verdict, and a way through to the full chart. */
+  function buildCardDetail(site, pathogenId, reading, naming) {
+    var details = el("details", "card-more");
+    var summary = el("summary", null, "Show more");
+    details.appendChild(summary);
+    var body = el("div", "more-body");
+    details.appendChild(body);
+
+    var measurement = data.meta.measurements.raw;
+    var windowStart = latestMs - 90 * DAY_MS;
+    var recent = pointsFor(site.id, pathogenId, { start: windowStart, end: latestMs });
+
+    if (recent.length >= 2) {
+      body.appendChild(el("h4", null, "Last 90 days"));
+      var chartWrap = el("div");
+      chartWrap.style.color = "var(--lvl-ink)";
+      chartWrap.appendChild(sparkline(recent,
+        naming.name + ": " + recent.length + " measurements over the last 90 days, " +
+        "from " + formatPlain(recent[0].value) + " to " +
+        formatPlain(recent[recent.length - 1].value) + " " + measurement.short_unit + "."));
+      body.appendChild(chartWrap);
+    }
+
+    // Most recent handful of readings, newest first.
+    var table = el("table", "readings");
+    var head = el("tr");
+    head.appendChild(el("th", null, "Date"));
+    var thValue = el("th", null, measurement.short_unit);
+    thValue.style.textAlign = "right";
+    head.appendChild(thValue);
+    var thLevel = el("th", null, "Level");
+    thLevel.style.textAlign = "right";
+    head.appendChild(thLevel);
+    table.appendChild(head);
+
+    recent.slice(-5).reverse().forEach(function (point) {
+      var row = el("tr");
+      row.appendChild(el("td", null, formatDate(point.t)));
+      var value = el("td", "num", formatPlain(point.value));
+      row.appendChild(value);
+      row.appendChild(el("td", "lvl",
+        point.category ? titleCase(data.meta.categories[point.category]) : "\u2014"));
+      table.appendChild(row);
+    });
+    if (recent.length) {
+      body.appendChild(el("h4", null, "Recent tests"));
+      body.appendChild(table);
+    }
+
+    // Show the working behind "rising" / "falling" / "holding steady".
+    var detail = reading.trend.detail;
+    if (detail && detail.earlyCount && detail.lateCount) {
+      body.appendChild(el("h4", null, "How the direction is worked out"));
+      body.appendChild(el("p", null,
+        "Over the last three weeks, the " + detail.lateCount +
+        " most recent tests averaged " + formatPlain(detail.lateMean) + " " +
+        measurement.short_unit + ". The " + detail.earlyCount +
+        " tests before those averaged " + formatPlain(detail.earlyMean) + ". " +
+        "A change of 50% or more either way is called rising or falling; " +
+        "anything in between is holding steady."));
+    }
+
+    body.appendChild(el("h4", null, "What the number means"));
+    body.appendChild(el("p", null,
+      "Gene copies found per gram of the solid matter in wastewater. It is a " +
+      "measure of how much of this is present across everyone the plant " +
+      "serves \u2014 not a count of people, and not a measure of any one " +
+      "person's risk."));
+
+    var toChart = el("button", "full-chart", "See the full chart for " + naming.name);
+    toChart.type = "button";
+    toChart.addEventListener("click", function () {
+      config.mode = "site";
+      config.pathogens = [pathogenId];
+      config.range = "1y";
+      setView("detailed");
+    });
+    body.appendChild(toChart);
+
+    return details;
+  }
 
   /* Location chooser. One list, searchable by town, city, plant or state -
      because someone looking for "Napa" should not first have to know that
