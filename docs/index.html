@@ -793,6 +793,11 @@ footer.site .disclaimer {
   /* A pathogen with no sample this recently is shown as "not currently
      reported" so nobody picks a discontinued marker and gets an empty chart. */
   var STALE_AFTER_DAYS = 120;
+  /* A plant that has not reported in this long has left the programme, not
+     merely missed a week. In the real data the split is unambiguous: sites are
+     either reporting within the last month or have been silent for over a
+     year, with nothing in between. */
+  var SITE_DORMANT_AFTER_DAYS = 60;
   /* Suggest the log scale once the visible series' peaks span this many
      times. At 25x the smallest series occupies under 4% of the axis, which
      reads as a flat line along the baseline. */
@@ -964,6 +969,7 @@ footer.site .disclaimer {
      the address bar, so by the time onboarding is wired up every visit would
      otherwise look like it arrived from a shared link. */
   var arrivedWithParams = window.location.search.length > 1;
+  var siteLastSampleMs = {};   // site id -> newest sample across all pathogens
 
   // ===================================================================
   // Config <-> URL <-> localStorage
@@ -1724,6 +1730,48 @@ footer.site .disclaimer {
   // ===================================================================
   function currentSite() { return siteById[config.sites[0]] || null; }
 
+  /* Newest sample per site, so the simple view can tell a plant that is
+     currently reporting from one that left the programme years ago. */
+  function indexSiteRecency() {
+    Object.keys(data.series).forEach(function (siteId) {
+      var newest = 0;
+      var bySite = data.series[siteId];
+      Object.keys(bySite).forEach(function (pathogenId) {
+        var days = bySite[pathogenId].d;
+        if (days.length && days[days.length - 1] > newest) newest = days[days.length - 1];
+      });
+      siteLastSampleMs[siteId] = epochMs + newest * DAY_MS;
+    });
+  }
+
+  function siteLastSample(siteId) { return siteLastSampleMs[siteId] || 0; }
+
+  function isSiteLive(siteId) {
+    var last = siteLastSample(siteId);
+    return !!last && (latestMs - last) / DAY_MS <= SITE_DORMANT_AFTER_DAYS;
+  }
+
+  function liveSites() {
+    return data.sites.filter(function (site) {
+      return data.series[site.id] && isSiteLive(site.id);
+    });
+  }
+
+  /* Nearest currently-reporting plants to a given point. Used both for
+     "use my location" and to offer an alternative when someone picks a town
+     whose plant has stopped reporting. */
+  function nearestLiveSites(lat, lon, count) {
+    var scored = [];
+    liveSites().forEach(function (site) {
+      if (site.lat == null || site.lon == null) return;
+      var dy = (site.lat - lat) * 111;
+      var dx = (site.lon - lon) * 111 * Math.cos(lat * Math.PI / 180);
+      scored.push({ site: site, km: Math.sqrt(dy * dy + dx * dx) });
+    });
+    scored.sort(function (a, b) { return a.km - b.km; });
+    return scored.slice(0, count || 3);
+  }
+
   /* The latest published level for one illness at one site, plus how it has
      been moving. Levels come from the source; nothing here invents one. */
   function simpleReading(siteId, pathogenId) {
@@ -1770,6 +1818,47 @@ footer.site .disclaimer {
     var container = $("levels");
     container.textContent = "";
     var newest = 0;
+
+    /* A plant already saved from an earlier visit - or named in a link - may
+       since have left the programme. Say so outright; five cards reading
+       "no level published" over a two-year-old date just looks broken. */
+    if (!isSiteLive(site.id)) {
+      $("simple-heading").textContent = "This plant is no longer reporting";
+      $("simple-asof").textContent =
+        site.name + " last tested wastewater on " +
+        formatDate(siteLastSample(site.id)) +
+        " and has not reported since, so there is nothing current to show.";
+
+      var panel = el("div", "level-card");
+      panel.style.gridColumn = "1 / -1";
+      if (site.lat != null) {
+        var near = nearestLiveSites(site.lat, site.lon, 3);
+        if (near.length) {
+          panel.appendChild(el("h3", null, "Closest plants still reporting"));
+          near.forEach(function (entry) {
+            var pick = el("button", "btn-lg",
+              entry.site.name + " \u2014 " +
+              [entry.site.city, entry.site.state].filter(Boolean).join(", ") +
+              " (" + Math.round(entry.km) + " km away)");
+            pick.type = "button";
+            pick.style.cssText = "display:block;width:100%;margin-top:10px;text-align:left";
+            pick.addEventListener("click", function () {
+              config.sites = [entry.site.id];
+              config.state = entry.site.state || "";
+              refresh();
+            });
+            panel.appendChild(pick);
+          });
+        }
+      }
+      if (!panel.children.length) {
+        panel.appendChild(el("p", null, "Use Change location to pick another plant."));
+      }
+      container.appendChild(panel);
+      return;
+    }
+
+    $("simple-heading").textContent = "What\u2019s going around near you";
 
     SIMPLE_PATHOGENS.forEach(function (pathogenId) {
       if (!pathogenById[pathogenId]) return;
@@ -1836,19 +1925,60 @@ footer.site .disclaimer {
     var list = $("chooser-list");
     list.textContent = "";
 
-    var matches = data.sites.filter(function (site) {
-      if (!data.series[site.id]) return false;
-      if (!query) return true;
+    function textOf(site) {
       return [site.city, site.state, site.name, site.plant]
-        .filter(Boolean).join(" ").toLowerCase().indexOf(query) !== -1;
-    }).sort(function (a, b) {
+        .filter(Boolean).join(" ").toLowerCase();
+    }
+    function hits(site) { return !query || textOf(site).indexOf(query) !== -1; }
+
+    var matches = liveSites().filter(hits).sort(function (a, b) {
       return (a.city || a.name).localeCompare(b.city || b.name);
     });
 
     if (!matches.length) {
       var empty = el("li");
-      empty.appendChild(el("div", "picker-empty",
-        "No plants match \u201c" + $("chooser-search").value + "\u201d. Try a nearby city, or your state."));
+      var box = el("div", "picker-empty");
+
+      /* 45 of the 193 plants left the programme and have not reported since
+         2024. Offering them would hand someone a page of "no level published"
+         with a two-year-old date - which is exactly what it looks like when
+         something is broken. They are hidden here, but searching for one
+         should say what happened rather than "no results". */
+      var dormant = data.sites.filter(function (site) {
+        return data.series[site.id] && !isSiteLive(site.id) && hits(site);
+      });
+
+      if (dormant.length) {
+        var plant = dormant[0];
+        box.appendChild(el("p", null,
+          plant.name + " in " + [plant.city, plant.state].filter(Boolean).join(", ") +
+          " stopped reporting on " + formatDate(siteLastSample(plant.id)) + "."));
+        var near = (plant.lat != null) ? nearestLiveSites(plant.lat, plant.lon, 3) : [];
+        if (near.length) {
+          box.appendChild(el("p", null, "The closest plants still reporting are:"));
+          var options = el("div");
+          near.forEach(function (entry) {
+            var pick = el("button", null,
+              entry.site.name + " \u2014 " +
+              [entry.site.city, entry.site.state].filter(Boolean).join(", ") +
+              " (" + Math.round(entry.km) + " km)");
+            pick.type = "button";
+            pick.className = "btn-lg";
+            pick.style.cssText = "display:block;width:100%;margin-top:8px;text-align:left";
+            pick.addEventListener("click", function () {
+              config.sites = [entry.site.id];
+              config.state = entry.site.state || "";
+              refresh();
+            });
+            options.appendChild(pick);
+          });
+          box.appendChild(options);
+        }
+      } else {
+        box.textContent = "No plant matches \u201c" + $("chooser-search").value +
+          "\u201d. Try a nearby city, or your state.";
+      }
+      empty.appendChild(box);
       list.appendChild(empty);
       return;
     }
@@ -1887,19 +2017,14 @@ footer.site .disclaimer {
     note.textContent = "Finding your location\u2026";
     navigator.geolocation.getCurrentPosition(function (position) {
       var lat = position.coords.latitude, lon = position.coords.longitude;
-      var best = null, bestDistance = Infinity;
-      data.sites.forEach(function (site) {
-        if (site.lat == null || site.lon == null || !data.series[site.id]) return;
-        var dLat = (site.lat - lat) * 111;                       // km per degree
-        var dLon = (site.lon - lon) * 111 * Math.cos(lat * Math.PI / 180);
-        var distance = dLat * dLat + dLon * dLon;                // squared; fine for ranking
-        if (distance < bestDistance) { bestDistance = distance; best = site; }
-      });
-      if (!best) {
+      var nearby = nearestLiveSites(lat, lon, 1);
+      if (!nearby.length) {
         note.textContent = "Could not find a nearby plant. Please search instead.";
         return;
       }
-      note.textContent = "Closest plant: " + best.name + ". You can change this any time.";
+      var best = nearby[0].site;
+      note.textContent = "Closest plant still reporting: " + best.name +
+        " (" + Math.round(nearby[0].km) + " km). You can change this any time.";
       config.sites = [best.id];
       config.state = best.state || "";
       refresh();
@@ -2190,6 +2315,7 @@ footer.site .disclaimer {
         data.pathogens.forEach(function (pathogen) { pathogenById[pathogen.id] = pathogen; });
         epochMs = Date.parse(data.meta.epoch + "T00:00:00Z");
         latestMs = Date.parse(data.meta.latest_sample_date + "T00:00:00Z");
+        indexSiteRecency();
 
         config = readConfig();
         renderStatus();

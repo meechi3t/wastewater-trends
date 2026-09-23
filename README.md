@@ -318,6 +318,15 @@ here" in words.
 
 **Simple view**
 
+- **Only plants that are actually reporting.** 45 of the 193 plants in the feed
+  left the programme and have not tested since 2024; the split is clean, with
+  every other site reporting within the last month. The simple view offers only
+  the 148 live ones. Searching a town whose plant has stopped says so, with its
+  last test date, and offers the nearest plants that are still reporting.
+  Geolocation skips dormant plants too, and a dormant plant arriving from a
+  bookmark or an old saved choice gets the same explanation instead of a page
+  of blank cards. (The detailed view still lists all 193 — historical data is
+  legitimately useful there.)
 - **One decision.** Pick the nearest treatment plant, by typing a town, city or
   state, or with **Use my location** (client-side only: coordinates are compared
   against the plant list in the browser and never leave it, because there is no
