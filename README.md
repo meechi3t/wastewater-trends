@@ -310,11 +310,55 @@ typo — is dropped and replaced with a working default rather than erroring.
 
 ---
 
-## Finding your way around
+## Two views
 
-The dashboard is built to be usable without reading this file:
+The site opens in **Simple view**, which is the one most people want. It asks a
+single question — where do you live — and then answers "what is going around
+here" in words.
 
-- **First visit opens a short guide** — what the site is, four steps, and the
+**Simple view**
+
+- **One decision.** Pick the nearest treatment plant, by typing a town, city or
+  state, or with **Use my location** (client-side only: coordinates are compared
+  against the plant list in the browser and never leave it, because there is no
+  backend for them to go to). The choice is remembered, so it is asked once.
+- **Answers in words, not numbers.** Each illness shows WastewaterSCAN's own
+  published level — *not detected / very low / low / medium / high / very high*
+  — as the headline, with a five-segment meter and a plain sentence for
+  direction ("and rising", "and none found recently"). No concentrations, no
+  units, no scale choices. These are the source's categories; this project
+  does not define levels of its own.
+- **Five illnesses**, chosen because they are household names and the source
+  publishes a level for each: COVID-19, Flu A, Flu B, RSV and Norovirus.
+  Anything a given plant does not test for is simply left out.
+- **Bigger type and bigger targets** (17px base, 48px minimum controls), one
+  card per row on a phone.
+- **A plain-language explainer** of what the levels and the direction mean,
+  and an explicit line that this is not a measure of personal risk.
+
+The level colours are deliberately **not** green-to-red. "High" here means a
+lot of something is in the wastewater, which is not the same as a safety
+judgement, and the source makes no such judgement. Instead the bottom three
+levels read as muted grey and medium upwards escalate through dark blue. Every
+one of those is real text, so the values were measured rather than eyeballed:
+all clear WCAG 4.5:1 against the surface in both themes. The full gradation is
+carried by the meter and the word, so nothing depends on distinguishing two
+blues.
+
+**Detailed view** is the original dashboard — chart, comparison modes,
+measurement and scale choices, CSV export. Reach it from **Detailed view** in
+the header or **See the full charts** at the bottom of the simple view. The
+first-visit guide belongs to this view; the simple view is meant to need no
+tour at all.
+
+The active view is part of the shared URL (`?view=simple` / `?view=detailed`),
+so a link opens the way its sender left it.
+
+## Finding your way around the detailed view
+
+The detailed view is built to be usable without reading this file:
+
+- **First visit to it opens a short guide** — what the site is, four steps, and the
   handful of things that are genuinely non-obvious (where COVID is, when to
   normalize, when to switch to a log scale, what a gap in a line means). It is
   dismissed permanently to `localStorage` and reopens from **How to use this**

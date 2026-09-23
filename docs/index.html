@@ -290,6 +290,122 @@ details.meta-drawer .drawer-body { padding: 0 16px 16px; font-size: .87rem; colo
 .dl dt { color: var(--text-muted); }
 .dl dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
 
+/* ====================================================================
+   SIMPLE VIEW - the default. Designed to be readable and operable by
+   someone who is not going to learn this interface: bigger type, one
+   decision (where do you live), and answers in words rather than numbers.
+   ==================================================================== */
+.simple { font-size: 17px; }
+.simple .panel { padding: 20px; }
+
+.place-bar {
+  display: flex; flex-wrap: wrap; gap: 12px 18px; align-items: center;
+  justify-content: space-between;
+  background: var(--surface-1); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 16px 18px; margin-bottom: 20px;
+  box-shadow: var(--shadow);
+}
+.place-bar .where { min-width: 0; }
+.place-bar .where strong { display: block; font-size: 1.22rem; font-weight: 600; }
+.place-bar .where span { color: var(--text-secondary); font-size: .95rem; }
+.btn-lg {
+  font: inherit; font-size: 1rem; font-weight: 600; cursor: pointer;
+  padding: 12px 20px; border-radius: 10px; min-height: 48px;
+  background: var(--surface-2); color: var(--text-primary);
+  border: 1px solid var(--border-strong);
+}
+.btn-lg:hover { border-color: var(--text-muted); }
+.btn-lg.primary { background: var(--accent); color: var(--accent-contrast); border-color: transparent; }
+.btn-lg.primary:hover { filter: brightness(1.08); }
+
+.simple h2.section { font-size: 1.5rem; margin-bottom: 4px; }
+.simple p.section-sub { margin: 0 0 18px; color: var(--text-secondary); font-size: 1rem; }
+
+.levels { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); }
+.level-card {
+  background: var(--surface-1); border: 1px solid var(--border);
+  border-radius: 14px; padding: 20px; box-shadow: var(--shadow);
+}
+.level-card h3 { font-size: 1.3rem; }
+.level-card .what { margin: 3px 0 0; color: var(--text-muted); font-size: .92rem; }
+.level-word {
+  display: block; margin: 14px 0 2px;
+  font-size: 2.1rem; font-weight: 700; letter-spacing: -.02em; line-height: 1.1;
+  color: var(--lvl-ink, var(--text-primary));
+}
+.level-meter { display: flex; gap: 5px; margin: 10px 0 12px; }
+.level-meter i {
+  flex: 1 1 0; height: 9px; border-radius: 3px;
+  background: var(--surface-2); border: 1px solid var(--border);
+}
+.level-meter i.on { background: var(--lvl-ink); border-color: var(--lvl-ink); }
+.level-move { font-size: 1.02rem; color: var(--text-secondary); display: flex; align-items: center; gap: 7px; }
+.level-move .arrow { font-size: 1.15rem; }
+.level-card .asof { margin: 12px 0 0; font-size: .87rem; color: var(--text-muted); }
+.level-card.is-unknown .level-word { font-size: 1.35rem; color: var(--text-secondary); }
+
+/* Colour for the source's own ordered levels. Deliberately NOT green-to-red:
+   "high" describes how much of something is in the wastewater, not a safety
+   judgement, and the source makes no such judgement either.
+
+   The bottom three levels - nothing found, or well under this plant's usual
+   range - read as muted grey; medium and above escalate through dark blue.
+   These are real text colours at a large size, so each was measured against
+   the surface rather than eyeballed: all clear 4.5:1 in both themes (light:
+   6.33, 6.34, 6.46, 11.64). The full six-step gradation is carried by how
+   many meter segments are filled and by the word itself, so nothing here
+   depends on telling two blues apart. */
+.lvl-0, .lvl-1, .lvl-2 { --lvl-ink: #5f5e59; }
+.lvl-3 { --lvl-ink: #2c6191; }
+.lvl-4 { --lvl-ink: #1c5cab; }
+.lvl-5 { --lvl-ink: #0d366b; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .lvl-0,
+  :root:not([data-theme="light"]) .lvl-1,
+  :root:not([data-theme="light"]) .lvl-2 { --lvl-ink: #97968d; }
+  :root:not([data-theme="light"]) .lvl-3 { --lvl-ink: #86b6ef; }
+  :root:not([data-theme="light"]) .lvl-4 { --lvl-ink: #9ec5f4; }
+  :root:not([data-theme="light"]) .lvl-5 { --lvl-ink: #cde2fb; }
+}
+:root[data-theme="dark"] .lvl-0,
+:root[data-theme="dark"] .lvl-1,
+:root[data-theme="dark"] .lvl-2 { --lvl-ink: #97968d; }
+:root[data-theme="dark"] .lvl-3 { --lvl-ink: #86b6ef; }
+:root[data-theme="dark"] .lvl-4 { --lvl-ink: #9ec5f4; }
+:root[data-theme="dark"] .lvl-5 { --lvl-ink: #cde2fb; }
+
+/* location chooser */
+.chooser { max-width: 640px; margin: 0 auto; }
+.chooser h2 { font-size: 1.6rem; margin-bottom: 6px; }
+.chooser p.lede { color: var(--text-secondary); font-size: 1.02rem; margin: 0 0 18px; }
+.chooser input[type="search"] { font-size: 1.05rem; padding: 14px 15px; min-height: 52px; }
+.chooser .picker-list { max-height: 320px; }
+.chooser .opt { padding: 12px 12px; font-size: 1rem; }
+.chooser .opt input { width: 20px; height: 20px; margin-top: 2px; }
+.chooser .opt-text small { font-size: .9rem; }
+.geo-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin: 14px 0 0; }
+.geo-note { font-size: .86rem; color: var(--text-muted); flex: 1 1 220px; }
+
+.simple details.explain {
+  margin-top: 22px; background: var(--surface-1);
+  border: 1px solid var(--border); border-radius: var(--radius);
+}
+.simple details.explain summary { padding: 15px 18px; font-size: 1.02rem; font-weight: 600; cursor: pointer; }
+.simple details.explain .body { padding: 0 18px 18px; color: var(--text-secondary); font-size: .97rem; }
+.simple details.explain .body p { margin: 0 0 10px; max-width: 70ch; }
+.simple details.explain dl { margin: 10px 0 0; }
+.simple details.explain dt { font-weight: 600; color: var(--text-primary); margin-top: 8px; }
+
+.view-switch { display: flex; gap: 8px; flex-wrap: wrap; flex: none; }
+
+@media (max-width: 560px) {
+  .simple { font-size: 16px; }
+  .levels { grid-template-columns: 1fr; }
+  .place-bar { padding: 14px; }
+  .btn-lg { width: 100%; }
+  .place-bar .btn-lg { width: auto; flex: 1 1 auto; }
+}
+
 /* ------------------------------------------------------------ onboarding */
 dialog#onboard {
   width: min(640px, calc(100vw - 32px));
@@ -405,15 +521,83 @@ footer.site .disclaimer {
   <header class="masthead">
     <div>
       <h1>Wastewater Trends</h1>
-      <p>Explore and compare pathogen levels measured in wastewater at treatment
-         plants across the United States, using published WastewaterSCAN data.</p>
+      <p id="masthead-sub">See which illnesses are showing up in your
+         community&rsquo;s wastewater right now.</p>
     </div>
     <div class="head-actions">
+      <button type="button" class="theme-toggle" id="view-toggle">Detailed view</button>
       <button type="button" class="theme-toggle" id="help-button">How to use this</button>
       <button type="button" class="theme-toggle" id="theme-toggle" aria-live="polite">Theme: System</button>
     </div>
   </header>
 
+  <!-- ============================ SIMPLE VIEW ============================ -->
+  <div id="simple-view" class="simple">
+
+    <!-- location chooser, shown until a place is picked -->
+    <section class="panel chooser" id="chooser" hidden aria-labelledby="chooser-title">
+      <h2 id="chooser-title">First, where do you live?</h2>
+      <p class="lede">Pick the wastewater treatment plant closest to you. You
+         only have to do this once &mdash; this page will remember it.</p>
+      <div class="picker">
+        <input type="search" class="picker-search" id="chooser-search"
+               placeholder="Type your town, city or state" aria-label="Search for a town, city or state" autocomplete="off">
+        <ul class="picker-list" id="chooser-list"></ul>
+      </div>
+      <div class="geo-row">
+        <button type="button" class="btn-lg" id="geo-button">Use my location</button>
+        <span class="geo-note" id="geo-note">Your location is only used in your
+          browser to find the closest plant. It is never sent anywhere.</span>
+      </div>
+    </section>
+
+    <!-- the answer -->
+    <div id="simple-results" hidden>
+      <div class="place-bar">
+        <div class="where">
+          <strong id="place-name">&nbsp;</strong>
+          <span id="place-plant">&nbsp;</span>
+        </div>
+        <button type="button" class="btn-lg" id="change-place">Change location</button>
+      </div>
+
+      <h2 class="section" id="simple-heading">What&rsquo;s going around near you</h2>
+      <p class="section-sub" id="simple-asof">&nbsp;</p>
+
+      <div class="levels" id="levels" aria-live="polite"></div>
+
+      <details class="explain">
+        <summary>What do these levels mean?</summary>
+        <div class="body">
+          <p>Wastewater from your area is tested regularly. When more people in
+             a community have an illness, more traces of it show up in the
+             wastewater &mdash; often before doctors&rsquo; offices notice a rise.</p>
+          <p>WastewaterSCAN, the research programme that collects this data,
+             sets the level for each illness by comparing the most recent
+             measurements against what this plant normally sees. The words
+             below are theirs, not ours.</p>
+          <dl>
+            <dt>Not detected</dt><dd>None found in the latest sample.</dd>
+            <dt>Very low / Low</dt><dd>Present, but well below this plant&rsquo;s usual range.</dd>
+            <dt>Medium</dt><dd>Around this plant&rsquo;s usual range.</dd>
+            <dt>High / Very high</dt><dd>Above this plant&rsquo;s usual range.</dd>
+          </dl>
+          <p style="margin-top:14px"><b>Rising, falling or steady</b> compares the
+             last three weeks of samples: the average of the most recent half
+             against the half before it.</p>
+          <p><b>This is not a measure of your personal risk.</b> It describes
+             the whole community served by one treatment plant.</p>
+        </div>
+      </details>
+
+      <p style="margin-top:18px">
+        <button type="button" class="btn-lg" id="to-detailed">See the full charts</button>
+      </p>
+    </div>
+  </div>
+
+  <!-- =========================== DETAILED VIEW =========================== -->
+  <div id="detailed-view">
   <div class="status" id="status" role="status">
     <span class="dot" aria-hidden="true"></span>
     <span id="status-text">Loading data…</span>
@@ -502,6 +686,8 @@ footer.site .disclaimer {
       <dl class="dl" id="meta-dl"></dl>
     </div>
   </details>
+
+  </div><!-- /#detailed-view -->
 
   <dialog id="onboard" aria-labelledby="onboard-title">
     <div class="onboard-head">
@@ -632,8 +818,33 @@ footer.site .disclaimer {
   var PREFERRED_PATHOGEN = "SC2_N";
 
   var DEFAULTS = {
+    view: "simple",
     mode: "site", state: "", sites: [], pathogens: [],
     measure: "raw", range: "90d", avg: false, scale: "linear"
+  };
+
+  /* The handful of illnesses a general visitor actually comes here about, in
+     the order they matter to them. Each must be a pathogen WastewaterSCAN
+     publishes a level for - the simple view reports the level in words, not a
+     concentration. Anything a site does not measure is simply skipped. */
+  var SIMPLE_PATHOGENS = ["SC2_N", "Influenza_A", "Influenza_B", "RSV", "Noro_G2"];
+
+  /* Short, plain names for the simple view. The detailed view keeps the
+     publisher's own labels; these are purely how we introduce each illness to
+     someone who is not a specialist. The descriptions are factual identifiers,
+     not statements about severity or personal risk. */
+  var SIMPLE_LABELS = {
+    "SC2_N":       { name: "COVID-19",  what: "The virus that causes COVID-19" },
+    "Influenza_A": { name: "Flu A",     what: "Seasonal influenza, type A" },
+    "Influenza_B": { name: "Flu B",     what: "Seasonal influenza, type B" },
+    "RSV":         { name: "RSV",       what: "Respiratory syncytial virus" },
+    "Noro_G2":     { name: "Norovirus", what: "Often called the stomach bug" }
+  };
+
+  /* The source's own ordered levels, mapped to how full the meter reads. */
+  var LEVEL_STEPS = {
+    "not detected": 0, "very low": 1, "low": 2,
+    "medium": 3, "high": 4, "very high": 5
   };
 
   // ===================================================================
@@ -777,6 +988,7 @@ footer.site .disclaimer {
       } catch (e) { /* corrupt entry - fall through to defaults */ }
     }
     var params = new URLSearchParams(window.location.search);
+    if (params.has("view"))     result.view = params.get("view");
     if (params.has("mode"))     result.mode = params.get("mode");
     if (params.has("state"))    result.state = params.get("state");
     if (params.has("sites"))    result.sites = parseList(params.get("sites"));
@@ -786,6 +998,12 @@ footer.site .disclaimer {
     if (params.has("range"))    result.range = params.get("range");
     if (params.has("avg"))      result.avg = params.get("avg") === "1" || params.get("avg") === "true";
     if (params.has("scale"))    result.scale = params.get("scale");
+
+    /* A shared link that names sites but not a state must not have those
+       sites filtered away by whatever state THIS visitor happened to look at
+       last. Explicit sites win: drop the remembered state and let the site
+       stand on its own. */
+    if (params.has("sites") && !params.has("state")) result.state = "";
     return result;
   }
 
@@ -793,6 +1011,7 @@ footer.site .disclaimer {
      hand-edited range - is dropped silently and replaced with a sane default,
      so a bad link still produces a working dashboard. */
   function sanitizeConfig() {
+    if (config.view !== "simple" && config.view !== "detailed") config.view = DEFAULTS.view;
     if (!MODES.some(function (m) { return m.id === config.mode; })) config.mode = DEFAULTS.mode;
     if (!RANGES.some(function (r) { return r.id === config.range; })) config.range = DEFAULTS.range;
     if (!SCALES.some(function (s) { return s.id === config.scale; })) config.scale = DEFAULTS.scale;
@@ -812,7 +1031,9 @@ footer.site .disclaimer {
     config.sites = config.sites.slice(0, maxSites);
     config.pathogens = config.pathogens.slice(0, maxPathogens);
 
-    if (!config.sites.length) {
+    if (!config.sites.length && config.view !== "simple") {
+      // The detailed view always needs something plotted; the simple view
+      // deliberately starts empty so it can ask where the visitor lives.
       var candidates = sitesForState();
       if (candidates.length) config.sites = [candidates[0].id];
     }
@@ -826,6 +1047,7 @@ footer.site .disclaimer {
 
   function writeConfig() {
     var params = new URLSearchParams();
+    params.set("view", config.view);
     params.set("mode", config.mode);
     if (config.state) params.set("state", config.state);
     if (config.sites.length) params.set("sites", config.sites.join(","));
@@ -951,7 +1173,7 @@ footer.site .disclaimer {
       (point.t < midpoint ? early : late).push(point.value);
     });
     if (early.length < TREND_MIN_PER_HALF || late.length < TREND_MIN_PER_HALF) {
-      return { key: "none", label: "Insufficient data", arrow: "—" };
+      return { key: "none", reason: "insufficient", label: "Insufficient data", arrow: "—" };
     }
     var mean = function (list) {
       return list.reduce(function (a, b) { return a + b; }, 0) / list.length;
@@ -961,7 +1183,7 @@ footer.site .disclaimer {
     // An entirely non-detected series is not "stable" in any useful sense -
     // there is no signal to be stable. Say so plainly instead.
     if (earlyMean === 0 && lateMean === 0) {
-      return { key: "none", label: "No detections", arrow: "—" };
+      return { key: "none", reason: "nodetect", label: "No detections", arrow: "—" };
     }
     if (earlyMean === 0) return { key: "rising", label: "Rising", arrow: "↑" };
     var ratio = lateMean / earlyMean;
@@ -1498,6 +1720,201 @@ footer.site .disclaimer {
   }
 
   // ===================================================================
+  // Simple view
+  // ===================================================================
+  function currentSite() { return siteById[config.sites[0]] || null; }
+
+  /* The latest published level for one illness at one site, plus how it has
+     been moving. Levels come from the source; nothing here invents one. */
+  function simpleReading(siteId, pathogenId) {
+    var entry = (data.series[siteId] || {})[pathogenId];
+    if (!entry || !entry.d.length) return null;
+
+    var lastIndex = entry.d.length - 1;
+    var sampledMs = epochMs + entry.d[lastIndex] * DAY_MS;
+    var levelName = null;
+    if (entry.c) {
+      // Walk back to the most recent sample that actually carries a level.
+      for (var i = lastIndex; i >= 0; i--) {
+        if (entry.c[i]) { levelName = data.meta.categories[entry.c[i]]; break; }
+      }
+    }
+
+    var bounds = { start: epochMs, end: latestMs };
+    var points = pointsFor(siteId, pathogenId, bounds);
+    return {
+      pathogen: pathogenById[pathogenId],
+      level: levelName,
+      step: levelName && LEVEL_STEPS[levelName] != null ? LEVEL_STEPS[levelName] : null,
+      sampled: sampledMs,
+      trend: trendFor(points, bounds)
+    };
+  }
+
+  var MOVEMENT = {
+    rising:  { text: "and rising",         arrow: "\u2191" },
+    falling: { text: "and falling",        arrow: "\u2193" },
+    stable:  { text: "and holding steady", arrow: "\u2192" },
+    none:    { text: "",                   arrow: "" }
+  };
+
+  function renderSimple() {
+    var site = currentSite();
+    $("chooser").hidden = !!site;
+    $("simple-results").hidden = !site;
+    if (!site) { renderChooser(); return; }
+
+    $("place-name").textContent = [site.city, site.state].filter(Boolean).join(", ") || site.name;
+    $("place-plant").textContent = site.name;
+
+    var container = $("levels");
+    container.textContent = "";
+    var newest = 0;
+
+    SIMPLE_PATHOGENS.forEach(function (pathogenId) {
+      if (!pathogenById[pathogenId]) return;
+      var reading = simpleReading(site.id, pathogenId);
+      if (!reading) return;                       // this plant does not test for it
+      if (reading.sampled > newest) newest = reading.sampled;
+
+      var naming = SIMPLE_LABELS[pathogenId] ||
+                   { name: reading.pathogen.label, what: reading.pathogen.common || "" };
+      var known = reading.step != null;
+
+      var card = el("article", "level-card lvl-" + (known ? reading.step : 0) +
+                                (known ? "" : " is-unknown"));
+      card.appendChild(el("h3", null, naming.name));
+      if (naming.what) card.appendChild(el("p", "what", naming.what));
+
+      card.appendChild(el("strong", "level-word",
+        known ? titleCase(reading.level) : "No level published"));
+
+      if (known) {
+        // Five steps, filled to the level. Shape as well as colour, so the
+        // reading never depends on telling two blues apart.
+        var meter = el("div", "level-meter");
+        meter.setAttribute("aria-hidden", "true");
+        for (var step = 1; step <= 5; step++) {
+          meter.appendChild(el("i", step <= reading.step ? "on" : null));
+        }
+        card.appendChild(meter);
+
+        // Always render this line. A card that silently omits it looks cut
+        // off beside its neighbours, and "we cannot tell yet" is itself useful.
+        var movement = MOVEMENT[reading.trend.key] || MOVEMENT.none;
+        var movementText = movement.text ||
+          (reading.trend.reason === "nodetect"
+            ? "and none found recently"
+            : "not enough recent tests to say");
+        var move = el("div", "level-move");
+        if (movement.arrow) move.appendChild(el("span", "arrow", movement.arrow));
+        move.appendChild(document.createTextNode(movementText));
+        card.appendChild(move);
+      }
+
+      card.appendChild(el("p", "asof", "Last tested " + formatDate(reading.sampled)));
+      container.appendChild(card);
+    });
+
+    if (!container.children.length) {
+      container.appendChild(el("p", "chart-msg",
+        "This plant has not reported any of these illnesses yet. Try another location."));
+    }
+
+    $("simple-asof").textContent = newest
+      ? "Based on wastewater tested up to " + formatDate(newest) + "."
+      : "";
+  }
+
+  function titleCase(text) { return text.charAt(0).toUpperCase() + text.slice(1); }
+
+  /* Location chooser. One list, searchable by town, city, plant or state -
+     because someone looking for "Napa" should not first have to know that
+     Napa is in California. */
+  function renderChooser() {
+    var query = ($("chooser-search").value || "").trim().toLowerCase();
+    var list = $("chooser-list");
+    list.textContent = "";
+
+    var matches = data.sites.filter(function (site) {
+      if (!data.series[site.id]) return false;
+      if (!query) return true;
+      return [site.city, site.state, site.name, site.plant]
+        .filter(Boolean).join(" ").toLowerCase().indexOf(query) !== -1;
+    }).sort(function (a, b) {
+      return (a.city || a.name).localeCompare(b.city || b.name);
+    });
+
+    if (!matches.length) {
+      var empty = el("li");
+      empty.appendChild(el("div", "picker-empty",
+        "No plants match \u201c" + $("chooser-search").value + "\u201d. Try a nearby city, or your state."));
+      list.appendChild(empty);
+      return;
+    }
+
+    matches.slice(0, 200).forEach(function (site) {
+      var li = el("li");
+      var label = el("label", "opt");
+      var input = el("input");
+      input.type = "radio";
+      input.name = "chooser-site";
+      input.value = site.id;
+      input.addEventListener("change", function () {
+        config.sites = [site.id];
+        config.state = site.state || "";
+        refresh();
+      });
+      var text = el("span", "opt-text");
+      text.appendChild(document.createTextNode(
+        [site.city, site.state].filter(Boolean).join(", ") || site.name));
+      text.appendChild(el("small", null, site.name));
+      label.appendChild(input);
+      label.appendChild(text);
+      li.appendChild(label);
+      list.appendChild(li);
+    });
+  }
+
+  /* Nearest plant by straight-line distance. Coordinates never leave the
+     browser - there is nowhere for them to go, the page has no backend. */
+  function useMyLocation() {
+    var note = $("geo-note");
+    if (!navigator.geolocation) {
+      note.textContent = "This browser cannot share your location. Please search instead.";
+      return;
+    }
+    note.textContent = "Finding your location\u2026";
+    navigator.geolocation.getCurrentPosition(function (position) {
+      var lat = position.coords.latitude, lon = position.coords.longitude;
+      var best = null, bestDistance = Infinity;
+      data.sites.forEach(function (site) {
+        if (site.lat == null || site.lon == null || !data.series[site.id]) return;
+        var dLat = (site.lat - lat) * 111;                       // km per degree
+        var dLon = (site.lon - lon) * 111 * Math.cos(lat * Math.PI / 180);
+        var distance = dLat * dLat + dLon * dLon;                // squared; fine for ranking
+        if (distance < bestDistance) { bestDistance = distance; best = site; }
+      });
+      if (!best) {
+        note.textContent = "Could not find a nearby plant. Please search instead.";
+        return;
+      }
+      note.textContent = "Closest plant: " + best.name + ". You can change this any time.";
+      config.sites = [best.id];
+      config.state = best.state || "";
+      refresh();
+    }, function () {
+      note.textContent = "Location was not shared. Please search for your town instead.";
+    }, { timeout: 10000, maximumAge: 600000 });
+  }
+
+  function setView(view) {
+    config.view = view;
+    refresh();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  // ===================================================================
   // Contextual suggestions
   // ===================================================================
   /* One nudge at a time, only when it would actually help. Concentrations
@@ -1587,7 +2004,9 @@ footer.site .disclaimer {
 
     // First visit only. A shared link is someone else's view, so it opens
     // straight into the data rather than a tour.
-    if (!storageGet(ONBOARD_KEY) && !arrivedWithParams) openOnboarding();
+    if (!storageGet(ONBOARD_KEY) && !arrivedWithParams && config.view === "detailed") {
+      openOnboarding();
+    }
   }
 
   // ===================================================================
@@ -1596,6 +2015,24 @@ footer.site .disclaimer {
   function refresh() {
     sanitizeConfig();
     writeConfig();
+
+    var simple = config.view === "simple";
+    $("simple-view").hidden = !simple;
+    $("detailed-view").hidden = simple;
+    $("view-toggle").textContent = simple ? "Detailed view" : "Simple view";
+    $("masthead-sub").textContent = simple
+      ? "See which illnesses are showing up in your community's wastewater right now."
+      : "Explore and compare pathogen measurements across United States sewersheds, "
+        + "using published WastewaterSCAN data.";
+    $("help-button").hidden = simple;   // the simple view explains itself
+
+    if (simple) {
+      // Tearing down the chart keeps a hidden canvas from fighting for layout.
+      if (chart) { chart.destroy(); chart = null; }
+      renderSimple();
+      return;
+    }
+
     renderControls();
     var built = buildSeries();
     lastRendered = built.series.filter(function (item) { return item.points.length > 0; });
@@ -1708,6 +2145,18 @@ footer.site .disclaimer {
       }
     });
     $("download-csv").addEventListener("click", downloadCsv);
+    $("view-toggle").addEventListener("click", function () {
+      setView(config.view === "simple" ? "detailed" : "simple");
+    });
+    $("to-detailed").addEventListener("click", function () { setView("detailed"); });
+    $("change-place").addEventListener("click", function () {
+      config.sites = [];
+      $("chooser-search").value = "";
+      refresh();
+      $("chooser-search").focus();
+    });
+    $("chooser-search").addEventListener("input", renderChooser);
+    $("geo-button").addEventListener("click", useMyLocation);
     window.addEventListener("popstate", function () {
       config = readConfig();
       refresh();
