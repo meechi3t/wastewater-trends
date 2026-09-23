@@ -538,6 +538,13 @@ footer.site {
   font-size: .84rem; color: var(--text-muted);
 }
 footer.site p { margin: 0 0 9px; max-width: 78ch; }
+footer.site .credit {
+  display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: baseline;
+  margin: 0 0 14px; padding-bottom: 14px; border-bottom: 1px solid var(--border);
+  font-size: .9rem;
+}
+footer.site .credit b { color: var(--text-primary); font-weight: 600; }
+footer.site .credit span { color: var(--text-muted); }
 footer.site .disclaimer {
   background: var(--surface-1); border: 1px solid var(--border);
   border-left: 3px solid var(--series-4);
@@ -830,6 +837,10 @@ footer.site .disclaimer {
   </dialog>
 
   <footer class="site">
+    <p class="credit">
+      <b>Visualized by Tip10 Technologies</b>
+      <span>&middot; Wastewater data collected and published by WastewaterSCAN</span>
+    </p>
     <p class="disclaimer">
       Wastewater measurements reflect community-level trends and should not be
       interpreted as an individual's risk of infection.
