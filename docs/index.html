@@ -539,9 +539,12 @@ footer.site {
 }
 footer.site p { margin: 0 0 9px; max-width: 78ch; }
 footer.site .credit {
-  display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: baseline;
+  display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center;
   margin: 0 0 14px; padding-bottom: 14px; border-bottom: 1px solid var(--border);
   font-size: .9rem;
+}
+footer.site .credit img {
+  width: 30px; height: 30px; flex: none; display: block;
 }
 footer.site .credit b { color: var(--text-primary); font-weight: 600; }
 footer.site .credit span { color: var(--text-muted); }
@@ -838,6 +841,8 @@ footer.site .disclaimer {
 
   <footer class="site">
     <p class="credit">
+      <img src="tip10-logo.png" width="30" height="30" alt="Tip10 Technologies"
+           loading="lazy" decoding="async">
       <b>Visualized by Tip10 Technologies</b>
       <span>&middot; Wastewater data collected and published by WastewaterSCAN</span>
     </p>

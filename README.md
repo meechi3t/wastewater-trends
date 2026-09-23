@@ -487,6 +487,10 @@ committing it is what makes the dashboard work with no backend.
 
 Code in this repository is MIT licensed — see [LICENSE](LICENSE).
 
+`docs/tip10-logo.png` is excluded: it is a trademark of Tip10 Technologies,
+included to identify who built the visualization, and is not covered by the
+MIT grant.
+
 That covers the code only. The wastewater measurements are published by
 WastewaterSCAN under their own terms (CC BY-NC 4.0, attribution as quoted
 above) and this project's licence does not change them.

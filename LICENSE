@@ -24,6 +24,11 @@ SOFTWARE.
 
 This licence covers the CODE in this repository only.
 
+It does NOT cover `docs/tip10-logo.png`. That logo is a trademark of Tip10
+Technologies, included here with permission to identify who built this
+visualization. It is not licensed for other use, and removing or replacing it
+does not affect your rights to the code under this licence.
+
 It does NOT cover the underlying wastewater surveillance measurements, which
 are published by WastewaterSCAN and remain subject to their own terms. See
 "Data source" in README.md and docs/source-info.json for attribution and
