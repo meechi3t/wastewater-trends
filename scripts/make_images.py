@@ -58,9 +58,6 @@ def og_image(source: Image.Image) -> None:
     card = Image.new("RGB", (width, height), NAVY)
     draw = ImageDraw.Draw(card)
 
-    # A hairline rule down the left, echoing the site's accent borders.
-    draw.rectangle([0, 0, 8, height], fill=SILVER)
-
     mark = source.convert("RGBA").resize((168, 168), Image.LANCZOS)
     card.paste(mark, (88, 86), mark)
 
