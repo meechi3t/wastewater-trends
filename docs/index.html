@@ -726,11 +726,51 @@ footer.site .disclaimer {
   <dialog id="onboard" aria-labelledby="onboard-title">
     <div class="onboard-head">
       <h2 id="onboard-title">How to use Wastewater Trends</h2>
-      <p>Treatment plants across the United States test their wastewater for
-         viruses and other markers. This site lets you explore those
-         measurements, compare places, and share what you find.</p>
+      <p id="onboard-lede">Treatment plants across the United States test their
+         wastewater for viruses and other markers. This site lets you explore
+         those measurements, compare places, and share what you find.</p>
     </div>
-    <div class="onboard-body">
+
+    <!-- shown in the simple view -->
+    <div class="onboard-body" id="onboard-simple">
+      <ol class="steps">
+        <li><span class="num" aria-hidden="true">1</span><span>
+          <b>Tell us where you live</b>
+          <span class="d">Pick the treatment plant closest to you, or let the
+            page find it. You only do this once.</span>
+        </span></li>
+        <li><span class="num" aria-hidden="true">2</span><span>
+          <b>See what&rsquo;s going around</b>
+          <span class="d">Each illness shows a level in plain words &mdash; low,
+            medium, high &mdash; and whether it has been rising or falling.</span>
+        </span></li>
+        <li><span class="num" aria-hidden="true">3</span><span>
+          <b>Tap &ldquo;Show more&rdquo; for detail</b>
+          <span class="d">Recent test results, the last 90 days at a glance, and
+            what the numbers actually mean.</span>
+        </span></li>
+      </ol>
+
+      <div class="tips">
+        <h3>Good to know</h3>
+        <ul>
+          <li>Wastewater often shows a rise <b>before</b> it is obvious
+              elsewhere, because it picks up everyone in the area at once.</li>
+          <li>Levels are compared against what <b>your own plant</b> normally
+              sees, so &ldquo;high&rdquo; means high for your area.</li>
+          <li>Not every town has a plant in the programme. If yours does not,
+              the page will offer the nearest one that does.</li>
+        </ul>
+      </div>
+
+      <p class="onboard-note">
+        This shows trends for a whole community. It is not a measure of any one
+        person&rsquo;s risk of infection.
+      </p>
+    </div>
+
+    <!-- shown in the detailed view -->
+    <div class="onboard-body" id="onboard-detailed">
       <ol class="steps">
         <li><span class="num" aria-hidden="true">1</span><span>
           <b>Pick a place</b>
@@ -793,11 +833,6 @@ footer.site .disclaimer {
     <p>
       Source: <a id="footer-source" href="https://data.wastewaterscan.org/" rel="noopener">WastewaterSCAN</a>.
       <span id="footer-updated"></span>
-    </p>
-    <p>
-      New here?
-      <button type="button" class="btn" id="help-button-footer"
-              style="font-size:.82rem;padding:5px 10px">How to use this dashboard</button>
     </p>
     <p>
       This is an independent, open-source visualization of published WastewaterSCAN
@@ -2277,6 +2312,27 @@ footer.site .disclaimer {
   // ===================================================================
   function openOnboarding() {
     var dialog = $("onboard");
+    var simple = config.view === "simple";
+
+    // The two views need different explanations - telling someone reading
+    // plain-language levels about log scales and eight-line comparisons would
+    // be worse than saying nothing.
+    $("onboard-simple").hidden = !simple;
+    $("onboard-detailed").hidden = simple;
+    $("onboard-title").textContent = simple
+      ? "Welcome to Wastewater Trends"
+      : "How to use Wastewater Trends";
+    $("onboard-lede").textContent = simple
+      ? "Wastewater from your area is tested regularly. When more people nearby "
+        + "have an illness, more traces of it turn up in the wastewater - so this "
+        + "is an early look at what is going around."
+      : "Treatment plants across the United States test their wastewater for "
+        + "viruses and other markers. This site lets you explore those "
+        + "measurements, compare places, and share what you find.";
+    // "Show me an example" loads a multi-pathogen chart; meaningless here.
+    $("onboard-example").hidden = simple;
+    $("onboard-close").textContent = simple ? "Get started" : "Start exploring";
+
     if (typeof dialog.showModal === "function") {
       if (!dialog.open) dialog.showModal();
     } else {
@@ -2314,7 +2370,6 @@ footer.site .disclaimer {
 
   function bindOnboarding() {
     $("help-button").addEventListener("click", openOnboarding);
-    $("help-button-footer").addEventListener("click", openOnboarding);
     $("onboard-close").addEventListener("click", closeOnboarding);
     $("onboard-example").addEventListener("click", loadExample);
     // Backdrop click and Esc both count as dismissing it.
@@ -2325,9 +2380,9 @@ footer.site .disclaimer {
 
     // First visit only. A shared link is someone else's view, so it opens
     // straight into the data rather than a tour.
-    if (!storageGet(ONBOARD_KEY) && !arrivedWithParams && config.view === "detailed") {
-      openOnboarding();
-    }
+    // First visit, in whichever view they land in. A shared link is someone
+    // else's view and opens straight into the data instead.
+    if (!storageGet(ONBOARD_KEY) && !arrivedWithParams) openOnboarding();
   }
 
   // ===================================================================
@@ -2345,7 +2400,6 @@ footer.site .disclaimer {
       ? "See which illnesses are showing up in your community's wastewater right now."
       : "Explore and compare pathogen measurements across United States sewersheds, "
         + "using published WastewaterSCAN data.";
-    $("help-button").hidden = simple;   // the simple view explains itself
 
     if (simple) {
       // Tearing down the chart keeps a hidden canvas from fighting for layout.
