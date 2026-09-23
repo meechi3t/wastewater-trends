@@ -474,9 +474,22 @@ average over fewer samples, since only the ones that exist are included.
 docs/index.html                     the entire dashboard (HTML + CSS + JS)
 docs/data.json                      generated dataset, served to the browser
 docs/source-info.json               provenance: source, licence, retrieval time
+docs/og-image.png                   1200x630 card shown when the link is shared
+docs/favicon-32.png                 browser tab icon
+docs/favicon-180.png                iOS home-screen icon
+docs/tip10-logo.png                 footer credit badge
 scripts/build_data.py               the ingestion pipeline
+scripts/make_images.py              regenerates the icons and preview card
 tests/validate_data.py              dataset checks; also the CI safety gate
 ```
+
+`scripts/make_images.py` is only run when the branding changes. It needs
+Pillow, which is a development-only dependency — neither the daily build nor
+the site requires it.
+
+If you fork this, change the absolute `og:*` URLs in `docs/index.html` to your
+own Pages address. Link previews are fetched server-side, so a relative path
+has nothing to resolve against.
 
 `docs/data.json` is committed on purpose: GitHub Pages serves it directly, and
 committing it is what makes the dashboard work with no backend.
