@@ -731,9 +731,14 @@ footer.site .disclaimer {
             <dt>Medium</dt><dd>Around this plant&rsquo;s usual range.</dd>
             <dt>High / Very high</dt><dd>Above this plant&rsquo;s usual range.</dd>
           </dl>
-          <p style="margin-top:14px"><b>Rising, falling or steady</b> compares the
-             last three weeks of samples: the average of the most recent half
-             against the half before it.</p>
+          <p style="margin-top:14px"><b>The level is not the latest test.</b>
+             It is set from several weeks of measurements, adjusted for how
+             dilute the wastewater was. Individual tests swing a lot with
+             rainfall and sampling time, so one result can sit above or below
+             the level without the level moving.</p>
+          <p><b>Rising, falling or steady</b> compares the last three weeks of
+             samples: the average of the most recent half against the half
+             before it.</p>
           <p><b>This is not a measure of your personal risk.</b> It describes
              the whole community served by one treatment plant.</p>
         </div>
@@ -2139,7 +2144,7 @@ footer.site .disclaimer {
         } else {
           value.appendChild(el("b", null, formatPlain(reading.value)));
           value.appendChild(document.createTextNode(" "));
-          value.appendChild(el("span", null, "copies per gram"));
+          value.appendChild(el("span", null, "copies per gram, latest test"));
         }
         card.appendChild(value);
       }
@@ -2239,7 +2244,7 @@ footer.site .disclaimer {
     var thValue = el("th", null, measurement.short_unit);
     thValue.style.textAlign = "right";
     head.appendChild(thValue);
-    var thLevel = el("th", null, "Level");
+    var thLevel = el("th", null, "Level that day");
     thLevel.style.textAlign = "right";
     head.appendChild(thLevel);
     table.appendChild(head);
@@ -2277,6 +2282,15 @@ footer.site .disclaimer {
       "measure of how much of this is present across everyone the plant " +
       "serves \u2014 not a count of people, and not a measure of any one " +
       "person's risk."));
+
+    body.appendChild(el("h4", null, "Why a single test can look out of step"));
+    body.appendChild(el("p", null,
+      "The level is not read off the latest test. WastewaterSCAN sets it from " +
+      "several weeks of measurements, adjusted for how dilute the wastewater " +
+      "was, and compared with this plant's own usual range. Individual tests " +
+      "swing a lot \u2014 how much rain fell, what time the sample was taken " +
+      "\u2014 so one result can sit well above or below what the level says, " +
+      "without the level changing."));
 
     var toChart = el("button", "full-chart", "See the full chart for " + naming.name);
     toChart.type = "button";

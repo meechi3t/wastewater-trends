@@ -384,6 +384,36 @@ The detailed view is built to be usable without reading this file:
   the baseline and look like missing data. It appears only on the linear scale,
   only with two or more series, and switches scale in one click.
 
+## What the published levels are, and are not
+
+Each simple-view card leads with WastewaterSCAN's own `activity_category`
+("not detected" through "very high"). Those are the source's categories; this
+project defines none of its own.
+
+They are **not** a reading of the measurement shown beside them, and this was
+measured rather than assumed. Across ~1,900 labelled SARS-CoV-2 samples, when
+a site's published level changed, the direction agreed with:
+
+| Compared against | Agreement |
+|---|---|
+| that day's single measurement (raw, normalized, or smoothed) | ~52% — no better than chance |
+| a 2–4 week trailing median of the raw value | ~68% |
+| a 2–4 week trailing median of the PMMoV-normalized value | **~74%** |
+
+So the level reflects several weeks of dilution-adjusted measurements compared
+against the site's own range, not the latest test. The publisher's front-end
+config describes the same shape: a tertile method for commonly-detected
+targets and a seasonal onset/offset method for the rest.
+
+This matters for presentation. An early version put the latest raw
+concentration directly under the level word, and they periodically contradicted
+each other — Oceanside WPCP on 2026-09-17 read 274,000 copies/g labelled
+*medium*, sitting between neighbouring days of 133,000 and 103,000 labelled
+*high*. Nothing was wrong with either figure: the spike was real, and the level
+had not moved because several weeks of normalized values had not moved. The
+cards now label the figure as the latest test and explain why a single result
+can sit above or below the level.
+
 ## Trend methodology
 
 Each summary card shows **↑ Rising**, **↓ Falling**, **→ Stable**, or
