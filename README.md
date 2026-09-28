@@ -356,9 +356,8 @@ blues.
 
 **Detailed view** is the original dashboard — chart, comparison modes,
 measurement and scale choices, CSV export. Reach it from **Detailed view** in
-the header or **See the full charts** at the bottom of the simple view. The
-first-visit guide belongs to this view; the simple view is meant to need no
-tour at all.
+the header or **See the full charts** at the bottom of the simple view.
+Each view has its own short guided tour (see below).
 
 The active view is part of the shared URL (`?view=simple` / `?view=detailed`),
 so a link opens the way its sender left it.
@@ -367,12 +366,27 @@ so a link opens the way its sender left it.
 
 The detailed view is built to be usable without reading this file:
 
-- **First visit to it opens a short guide** — what the site is, four steps, and the
-  handful of things that are genuinely non-obvious (where COVID is, when to
-  normalize, when to switch to a log scale, what a gap in a line means). It is
-  dismissed permanently to `localStorage` and reopens from **How to use this**
-  in the header or the link in the footer. Opening a *shared link* skips it:
-  that visitor came for someone's specific view, not a tour.
+- **A guided tour, not a wall of text.** The first time someone lands in a
+  view, a tour walks them through the real controls one at a time: a
+  spotlight on the control, a short card saying what it is for, and
+  **Back / Next / Skip tour**. The page stays usable underneath, so people
+  learn by doing. Some steps ask for an action — "pick your plant" in the
+  simple view moves on by itself once a plant is chosen — and steps whose
+  control is not on screen are passed over.
+  - *Simple view:* find your plant → the level cards → **Show more** →
+    change location → where the charts are → **Tutorial**.
+  - *Detailed view:* compare mode → place → pathogens (where COVID is) →
+    when to normalize → when to use a log scale → the trend cards → reading
+    the chart (a gap is not a zero) → sharing and CSV. It ends with **Show me
+    an example** and **All tips**.
+  - Entering the detailed view for the first time starts its tour, so the
+    simple view's last steps hand over naturally.
+  - Each tour is marked as seen in `localStorage` when finished or skipped
+    (Esc also skips), and **Tutorial** in the header replays the tour for the
+    current view. The full one-page list of tips is still there, under
+    **All tips** at the end of the tour. Opening a *shared link* skips the
+    tour: that visitor came for someone's specific view. Visitors who already
+    dismissed the old one-page guide aren't shown the tours again.
 - **"Show me an example"** loads a real working view — one site, four common
   pathogens, log scale — because a worked example explains the controls faster
   than prose does.

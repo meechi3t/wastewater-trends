@@ -563,6 +563,50 @@ dialog#onboard[open] { display: flex; flex-direction: column; max-height: min(86
   .onboard-foot .btn { flex: 1 1 auto; }
 }
 
+/* ------------------------------------------------------------ guided tour */
+.tour { position: fixed; inset: 0; z-index: 1000; pointer-events: none; }
+/* The dimming is the spotlight's own shadow, so the page stays clickable
+   everywhere - including the control being explained. */
+.tour-spot {
+  position: fixed; border-radius: 12px; pointer-events: none;
+  box-shadow: 0 0 0 9999px rgba(10,10,10,.55);
+  outline: 3px solid var(--focus); outline-offset: 0;
+  transition: top .25s ease, left .25s ease, width .25s ease, height .25s ease;
+}
+.tour-spot.is-none { outline: none; }
+.tour-pop {
+  position: fixed; pointer-events: auto; width: min(380px, calc(100vw - 24px));
+  background: var(--surface-1); color: var(--text-primary);
+  border: 1px solid var(--border); border-radius: 14px;
+  box-shadow: 0 18px 48px rgba(0,0,0,.28); padding: 18px 18px 14px;
+}
+.tour-pop:focus { outline: none; }
+.tour-pop:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.tour-pop.is-center { width: min(480px, calc(100vw - 24px)); }
+.tour-count { margin: 0 0 4px; font-size: .78rem; font-weight: 600; letter-spacing: .04em;
+  text-transform: uppercase; color: var(--text-muted); }
+.tour-pop h2 { font-size: 1.15rem; }
+.tour-body { margin-top: 6px; font-size: .95rem; color: var(--text-secondary); }
+.tour-body p { margin: 0 0 8px; }
+.tour-body code { background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: 4px; padding: 1px 5px; font-size: .85em; }
+.tour-try {
+  margin: 4px 0 0; padding: 9px 11px; font-size: .9rem; font-weight: 600;
+  background: var(--surface-2); border-left: 3px solid var(--accent); border-radius: 6px;
+}
+.tour-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 14px; }
+.tour-actions { display: contents; }
+.tour-skip {
+  margin-right: auto; background: none; border: 0; padding: 8px 2px; cursor: pointer;
+  font: inherit; font-size: .9rem; color: var(--text-muted); text-decoration: underline;
+}
+.tour-skip:hover { color: var(--text-primary); }
+@media (max-width: 560px) {
+  /* On a phone the card docks to the bottom edge, like a sheet. */
+  .tour-pop, .tour-pop.is-center { left: 12px !important; right: 12px; bottom: 12px; top: auto !important; width: auto; }
+}
+@media (prefers-reduced-motion: reduce) { .tour-spot { transition: none; } }
+
 /* picker group headings + availability */
 .picker-group {
   position: sticky; top: 0; z-index: 1;
@@ -664,7 +708,7 @@ footer.site .disclaimer {
            button reading "Detailed view" is ambiguous: it could be a label for
            the current page or a link to another one. -->
       <div class="navswitch" id="nav-views"></div>
-      <button type="button" class="navbtn" id="help-button">Help</button>
+      <button type="button" class="navbtn" id="help-button">Tutorial</button>
       <button type="button" class="iconbtn" id="theme-toggle" aria-label="Switch to dark theme">
         <svg id="theme-icon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"
              fill="none" stroke="currentColor" stroke-width="2"
@@ -944,10 +988,31 @@ footer.site .disclaimer {
       </p>
     </div>
     <div class="onboard-foot">
+      <button type="button" class="btn" id="onboard-tour">Take the guided tour</button>
       <button type="button" class="btn" id="onboard-example">Show me an example</button>
       <button type="button" class="btn btn-primary" id="onboard-close">Start exploring</button>
     </div>
   </dialog>
+
+  <!-- Guided tour: a spotlight on one real control at a time, with a card
+       explaining it. Non-modal on purpose - the highlighted control stays
+       usable, so people learn by doing rather than by reading a list. -->
+  <div class="tour" id="tour" hidden>
+    <div class="tour-spot" id="tour-spot" aria-hidden="true"></div>
+    <div class="tour-pop" id="tour-pop" role="dialog" aria-modal="false"
+         aria-labelledby="tour-title" aria-describedby="tour-body" tabindex="-1">
+      <p class="tour-count" id="tour-count"></p>
+      <h2 id="tour-title"></h2>
+      <div class="tour-body" id="tour-body"></div>
+      <p class="tour-try" id="tour-try" hidden></p>
+      <div class="tour-foot">
+        <button type="button" class="tour-skip" id="tour-skip">Skip tour</button>
+        <span class="tour-actions" id="tour-actions"></span>
+        <button type="button" class="btn" id="tour-back">Back</button>
+        <button type="button" class="btn btn-primary" id="tour-next">Next</button>
+      </div>
+    </div>
+  </div>
 
   <footer class="site">
     <p class="credit">
@@ -994,7 +1059,8 @@ footer.site .disclaimer {
   var TREND_FOLD = 1.5;            // >=1.5x up is rising, <=1/1.5 down is falling
   var ROLLING_WINDOW_DAYS = 7;
   var STORAGE_KEY = "wastewater-trends:config";
-  var ONBOARD_KEY = "wastewater-trends:onboarded";
+  var ONBOARD_KEY = "wastewater-trends:onboarded";            // simple view tour seen
+  var TOUR_DETAILED_KEY = "wastewater-trends:toured-detailed";
   /* A pathogen with no sample this recently is shown as "not currently
      reported" so nobody picks a discontinued marker and gets an empty chart. */
   var STALE_AFTER_DAYS = 120;
@@ -2444,6 +2510,7 @@ footer.site .disclaimer {
     pendingHistoryPush = true;      // Back should return to the other view
     refresh();
     window.scrollTo({ top: 0, behavior: "smooth" });
+    if (toursReady) maybeStartTour();   // first time in this view
   }
 
   function renderNav() {
@@ -2559,8 +2626,283 @@ footer.site .disclaimer {
     $("chart-panel").scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
+  // ===================================================================
+  // Guided tour
+  //
+  // Walks through the real controls one at a time: a spotlight on the
+  // control, a card saying what it is for, Back / Next / Skip. Steps can ask
+  // the visitor to actually do the thing ("pick your plant") and carry on by
+  // themselves once it is done. Steps whose control is not on screen - the
+  // chooser when a plant is already picked, say - are passed over.
+  // ===================================================================
+  function visible(node) {
+    return !!(node && node.getClientRects().length && !node.closest("[hidden]"));
+  }
+  function fieldOf(id) { var n = $(id); return n && n.closest(".field"); }
+
+  var TOURS = {
+    simple: [
+      { title: "Welcome to Wastewater Trends",
+        body: "<p>Wastewater from your area is tested regularly. When more people " +
+              "nearby have an illness, more traces of it turn up in the wastewater " +
+              "\u2014 so this is an early look at what is going around.</p>" +
+              "<p>This short tour shows you around. It takes under a minute.</p>",
+        next: "Show me around" },
+      { target: function () { return $("chooser"); },
+        title: "First, find your treatment plant",
+        body: "<p>Type your town, city or state and pick the closest plant from the " +
+              "list \u2014 or press <b>Use my location</b>. You only do this once.</p>",
+        doThis: "Try it now. The tour carries on as soon as you pick one.",
+        done: function () { return !!currentSite(); },
+        focus: function () { return $("chooser-search"); } },
+      { target: function () { return document.querySelector("#levels .level-card"); },
+        title: "One card per illness",
+        body: "<p>The big word is the level WastewaterSCAN publishes for your plant, " +
+              "from <b>not detected</b> to <b>very high</b>. Underneath: whether it " +
+              "has been rising or falling over the last three weeks.</p>" +
+              "<p>\u201cHigh\u201d means high <i>for your plant</i> \u2014 each " +
+              "level is compared with what that plant normally sees.</p>" },
+      { target: function () { return document.querySelector("#levels .card-more summary"); },
+        title: "Want the detail? Tap \u201cShow more\u201d",
+        body: "<p>Recent test results, the last 90 days at a glance, and what the " +
+              "numbers actually mean.</p>",
+        doThis: "Try opening it." },
+      { target: function () { return $("change-place"); },
+        title: "Somewhere else?",
+        body: "<p>Change location at any time. Your choice is remembered for next visit.</p>" },
+      { target: function () { return $("nav-views"); },
+        title: "Charts and comparisons live here",
+        body: "<p><b>Charts</b> has the full charts. Put several illnesses on one " +
+              "chart, compare one illness across several places, and download the data.</p>" },
+      { target: function () { return $("help-button"); },
+        title: "That\u2019s it",
+        body: "<p>Press <b>Tutorial</b> any time to go through this again.</p>",
+        next: "Done" }
+    ],
+    detailed: [
+      { title: "The Charts view",
+        body: "<p>Full charts of the measurements: several illnesses at one place, " +
+              "or one illness across several places.</p>" +
+              "<p>Here is a quick walk through the controls.</p>",
+        next: "Show me around" },
+      { target: function () { return fieldOf("mode-group"); },
+        title: "Choose what to compare",
+        body: "<p><b>One site, many pathogens</b> draws several illnesses on the same " +
+              "chart. <b>One pathogen, many sites</b> compares places. Up to 8 lines " +
+              "at a time.</p>" },
+      { target: function () { return $("site-field"); },
+        title: "Pick a place",
+        body: "<p>Narrow by state above, then choose a treatment plant. The search " +
+              "matches plant names and cities.</p>" },
+      { target: function () { return $("pathogen-field"); },
+        title: "Tick what to plot",
+        body: "<p>Each ticked pathogen becomes a line on the chart.</p>" +
+              "<p>Looking for COVID? It is listed as <code>SARS-CoV-2</code> \u2014 " +
+              "searching \u201ccovid\u201d finds it.</p>",
+        doThis: "Try ticking a second one, then press Next." },
+      { target: function () { return fieldOf("measure-select"); },
+        title: "Comparing different cities?",
+        body: "<p>Switch to <b>Normalized to PMMoV</b>. Raw amounts depend on how " +
+              "diluted each sewer system is, so they are not comparable between places.</p>" },
+      { target: function () { return fieldOf("scale-group"); },
+        title: "Lines squashed flat?",
+        body: "<p>Switch to <b>Log</b>. Pathogens can differ by thousands of times, " +
+              "so one large series flattens the rest.</p>" },
+      { target: function () { return $("cards"); },
+        title: "The latest reading and its direction",
+        body: "<p>One card per line: the most recent measurement and whether it has " +
+              "been rising, falling or stable over about three weeks.</p>" },
+      { target: function () { return $("chart-panel"); },
+        title: "Read the chart",
+        body: "<p>Hover or tap to see exact values. A gap in a line means no sample " +
+              "around that date \u2014 not a zero.</p>" },
+      { target: function () { return $("copy-link"); },
+        title: "Save or share it",
+        body: "<p>Every setting is in the address bar. <b>Copy view link</b> gives " +
+              "anyone your exact view; <b>Download CSV</b> exports what is on screen.</p>" },
+      { title: "You\u2019re ready",
+        body: "<p>Not sure where to start? Load an example: one plant, four common " +
+              "illnesses, on a log scale.</p>" +
+              "<p>Press <b>Tutorial</b> any time to go through this again.</p>",
+        actions: [
+          { label: "Show me an example", run: function () { endTour(); loadExample(); } },
+          { label: "All tips", run: function () { endTour(); openOnboarding(); } }
+        ],
+        next: "Done" }
+    ]
+  };
+
+  var tour = null;   // { view, steps, index }
+
+  function tourKey(view) { return view === "simple" ? ONBOARD_KEY : TOUR_DETAILED_KEY; }
+
+  function startTour() {
+    var dialog = $("onboard");
+    if (dialog.open) { if (typeof dialog.close === "function") dialog.close(); else dialog.removeAttribute("open"); }
+    var view = config.view === "simple" ? "simple" : "detailed";
+    /* Drop steps that cannot apply right now, so "3 of 6" stays true: no
+       chooser step once a plant is picked. Steps after an unmet "do this"
+       step are kept - they appear once it is done. */
+    var steps = TOURS[view].filter(function (step) {
+      return !step.target || !step.done || !step.done();
+    });
+    tour = { view: view, steps: steps, index: 0 };
+    $("tour").hidden = false;
+    showTourStep(0, 1);
+  }
+
+  function endTour() {
+    if (!tour) return;
+    storageSet(tourKey(tour.view), "1");
+    tour = null;
+    $("tour").hidden = true;
+  }
+
+  /* Move to step `index`, walking in `direction` past any step whose control
+     is not on screen. Walking off either end finishes the tour. */
+  function showTourStep(index, direction) {
+    if (!tour) return;
+    while (index >= 0 && index < tour.steps.length) {
+      var candidate = tour.steps[index];
+      if (!candidate.target || visible(candidate.target())) break;
+      index += direction;
+    }
+    if (index < 0) index = 0;
+    if (index >= tour.steps.length) { endTour(); return; }
+    tour.index = index;
+    var step = tour.steps[index];
+
+    var counted = tour.steps.filter(function (s) { return s.target; }).length;
+    var position = tour.steps.slice(0, index + 1).filter(function (s) { return s.target; }).length;
+    $("tour-count").textContent = step.target ? "Step " + position + " of " + counted : "";
+    $("tour-count").hidden = !step.target;
+    $("tour-title").textContent = step.title;
+    $("tour-body").innerHTML = step.body;   // static strings from TOURS above
+    $("tour-try").hidden = !step.doThis;
+    $("tour-try").textContent = step.doThis || "";
+
+    var actions = $("tour-actions");
+    actions.textContent = "";
+    (step.actions || []).forEach(function (action) {
+      var button = el("button", "btn", action.label);
+      button.type = "button";
+      button.addEventListener("click", action.run);
+      actions.appendChild(button);
+    });
+    $("tour-back").hidden = index === 0;
+    $("tour-next").textContent = step.next || "Next";
+    $("tour-skip").hidden = index === tour.steps.length - 1;
+
+    var target = step.target ? step.target() : null;
+    if (target) {
+      // Bring the control near the top, leaving room for the card below it
+      // (on a phone the card docks to the bottom edge instead).
+      var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      var lead = window.innerWidth <= 560 ? 16 : Math.min(window.innerHeight * 0.18, 120);
+      window.scrollTo({ top: window.scrollY + target.getBoundingClientRect().top - lead,
+                        behavior: reduce ? "auto" : "smooth" });
+    }
+    placeTour();
+    var focusTo = step.focus ? step.focus() : null;
+    (focusTo && visible(focusTo) ? focusTo : $("tour-pop")).focus({ preventScroll: true });
+  }
+
+  /* Keep the spotlight on its control and the card beside it, through
+     scrolling, resizing and re-renders. */
+  function placeTour() {
+    if (!tour) return;
+    var step = tour.steps[tour.index];
+    var spot = $("tour-spot"), pop = $("tour-pop");
+    var target = step.target ? step.target() : null;
+    var vw = window.innerWidth, vh = window.innerHeight;
+
+    if (!target || !visible(target)) {
+      spot.classList.add("is-none");
+      spot.style.cssText = "top:" + vh / 2 + "px;left:" + vw / 2 + "px;width:0;height:0";
+      pop.classList.add("is-center");
+      pop.style.left = Math.max(12, (vw - pop.offsetWidth) / 2) + "px";
+      pop.style.top = Math.max(12, (vh - pop.offsetHeight) / 2) + "px";
+      return;
+    }
+    spot.classList.remove("is-none");
+    pop.classList.remove("is-center");
+    var pad = 6;
+    var r = target.getBoundingClientRect();
+    // A control taller than the window is clipped to it, so the ring stays visible.
+    var top = Math.max(r.top - pad, 4), bottom = Math.min(r.bottom + pad, vh - 4);
+    spot.style.cssText = "top:" + top + "px;left:" + (r.left - pad) + "px;width:" +
+      (r.width + pad * 2) + "px;height:" + Math.max(bottom - top, 0) + "px";
+
+    // Below the control if it fits, else above, else beside it (narrowing
+    // the card a little if need be), else over the bottom edge.
+    pop.style.width = "";
+    var gap = 12, h = pop.offsetHeight, w = pop.offsetWidth;
+    var x = Math.min(Math.max(r.left, 12), vw - w - 12), y = bottom + gap;
+    if (y + h > vh - 8) y = top - gap - h;
+    if (y < 8) {
+      var right = vw - r.right - pad - gap - 12, left = r.left - pad - gap - 12;
+      var side = Math.max(right, left);
+      if (side >= 250 && window.innerWidth > 560) {
+        pop.style.width = Math.min(w, side) + "px";
+        h = pop.offsetHeight;
+        x = right >= left ? r.right + pad + gap : r.left - pad - gap - pop.offsetWidth;
+        y = Math.min(Math.max(top, 8), vh - h - 8);
+      } else {
+        y = vh - h - 12;
+      }
+    }
+    pop.style.left = x + "px";
+    pop.style.top = y + "px";
+  }
+
+  /* Called after every render. A "do this" step moves on by itself once it
+     is done; switching view ends the tour for the view being left. */
+  function syncTour() {
+    if (!tour) return;
+    if (tour.view !== config.view) { endTour(); return; }
+    var step = tour.steps[tour.index];
+    if (step.done && step.done()) {
+      // Let the freshly rendered results settle before measuring them. The
+      // flag stops a second render in the same frame advancing twice.
+      if (tour.advancing) return;
+      tour.advancing = true;
+      requestAnimationFrame(function () {
+        if (!tour) return;
+        tour.advancing = false;
+        showTourStep(tour.index + 1, 1);
+      });
+      return;
+    }
+    placeTour();
+  }
+
+  function bindTour() {
+    $("tour-next").addEventListener("click", function () { showTourStep(tour.index + 1, 1); });
+    $("tour-back").addEventListener("click", function () { showTourStep(tour.index - 1, -1); });
+    $("tour-skip").addEventListener("click", endTour);
+    document.addEventListener("keydown", function (event) {
+      if (tour && event.key === "Escape") endTour();
+    });
+    window.addEventListener("scroll", function () { placeTour(); }, { passive: true });
+    window.addEventListener("resize", function () { placeTour(); });
+  }
+
+  /* First time in each view, offer that view's tour - but not to someone
+     who opened a shared link (they came for that view, not a tour), and not
+     to a returning visitor who already saw the old one-page guide. */
+  var returningVisitor = !!storageGet(ONBOARD_KEY);
+  function maybeStartTour() {
+    if (tour) return;
+    var view = config.view === "simple" ? "simple" : "detailed";
+    if (storageGet(tourKey(view))) return;
+    if (view === "detailed" && returningVisitor) return;
+    startTour();
+  }
+
   function bindOnboarding() {
-    $("help-button").addEventListener("click", openOnboarding);
+    bindTour();
+    $("help-button").addEventListener("click", startTour);
+    $("onboard-tour").addEventListener("click", startTour);
     $("onboard-close").addEventListener("click", closeOnboarding);
     $("onboard-example").addEventListener("click", loadExample);
     // Backdrop click and Esc both count as dismissing it.
@@ -2569,12 +2911,11 @@ footer.site .disclaimer {
     });
     $("onboard").addEventListener("close", function () { storageSet(ONBOARD_KEY, "1"); });
 
-    // First visit only. A shared link is someone else's view, so it opens
-    // straight into the data rather than a tour.
-    // First visit, in whichever view they land in. A shared link is someone
-    // else's view and opens straight into the data instead.
-    if (!storageGet(ONBOARD_KEY) && !arrivedWithParams) openOnboarding();
+    // A shared link is someone else's view and opens straight into the data.
+    if (!arrivedWithParams) maybeStartTour();
+    toursReady = true;
   }
+  var toursReady = false;
 
   // ===================================================================
   // Orchestration
@@ -2596,6 +2937,7 @@ footer.site .disclaimer {
       // Tearing down the chart keeps a hidden canvas from fighting for layout.
       if (chart) { chart.destroy(); chart = null; }
       renderSimple();
+      syncTour();
       return;
     }
 
@@ -2606,6 +2948,7 @@ footer.site .disclaimer {
     renderCards(built.series);
     renderSuggestion(built.series);
     renderChart(built.series, built.bounds);
+    syncTour();
   }
 
   function renderStatus() {
