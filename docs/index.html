@@ -708,7 +708,7 @@ footer.site .disclaimer {
            button reading "Detailed view" is ambiguous: it could be a label for
            the current page or a link to another one. -->
       <div class="navswitch" id="nav-views"></div>
-      <button type="button" class="navbtn" id="help-button">Help</button>
+      <button type="button" class="navbtn" id="help-button">Tutorial</button>
       <button type="button" class="iconbtn" id="theme-toggle" aria-label="Switch to dark theme">
         <svg id="theme-icon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"
              fill="none" stroke="currentColor" stroke-width="2"
@@ -2672,15 +2672,15 @@ footer.site .disclaimer {
         body: "<p>Change location at any time. Your choice is remembered for next visit.</p>" },
       { target: function () { return $("nav-views"); },
         title: "Charts and comparisons live here",
-        body: "<p><b>Detailed view</b> has full charts. Put several illnesses on one " +
+        body: "<p><b>Charts</b> has the full charts. Put several illnesses on one " +
               "chart, compare one illness across several places, and download the data.</p>" },
       { target: function () { return $("help-button"); },
         title: "That\u2019s it",
-        body: "<p>Press <b>Help</b> any time to take this tour again or read all the tips.</p>",
+        body: "<p>Press <b>Tutorial</b> any time to go through this again.</p>",
         next: "Done" }
     ],
     detailed: [
-      { title: "The detailed view",
+      { title: "The Charts view",
         body: "<p>Full charts of the measurements: several illnesses at one place, " +
               "or one illness across several places.</p>" +
               "<p>Here is a quick walk through the controls.</p>",
@@ -2723,7 +2723,7 @@ footer.site .disclaimer {
       { title: "You\u2019re ready",
         body: "<p>Not sure where to start? Load an example: one plant, four common " +
               "illnesses, on a log scale.</p>" +
-              "<p>Press <b>Help</b> any time to take this tour again.</p>",
+              "<p>Press <b>Tutorial</b> any time to go through this again.</p>",
         actions: [
           { label: "Show me an example", run: function () { endTour(); loadExample(); } },
           { label: "All tips", run: function () { endTour(); openOnboarding(); } }

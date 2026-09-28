@@ -374,7 +374,7 @@ The detailed view is built to be usable without reading this file:
   simple view moves on by itself once a plant is chosen — and steps whose
   control is not on screen are passed over.
   - *Simple view:* find your plant → the level cards → **Show more** →
-    change location → where the charts are → **Help**.
+    change location → where the charts are → **Tutorial**.
   - *Detailed view:* compare mode → place → pathogens (where COVID is) →
     when to normalize → when to use a log scale → the trend cards → reading
     the chart (a gap is not a zero) → sharing and CSV. It ends with **Show me
@@ -382,7 +382,7 @@ The detailed view is built to be usable without reading this file:
   - Entering the detailed view for the first time starts its tour, so the
     simple view's last steps hand over naturally.
   - Each tour is marked as seen in `localStorage` when finished or skipped
-    (Esc also skips), and **Help** in the header replays the tour for the
+    (Esc also skips), and **Tutorial** in the header replays the tour for the
     current view. The full one-page list of tips is still there, under
     **All tips** at the end of the tour. Opening a *shared link* skips the
     tour: that visitor came for someone's specific view. Visitors who already
